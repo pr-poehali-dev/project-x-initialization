@@ -1,8 +1,14 @@
 import { useState, useEffect } from "react"
+import AuthModal from "@/components/AuthModal"
+import { getToken } from "@/lib/api"
+import { useNavigate } from "react-router-dom"
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const [showAuth, setShowAuth] = useState(false)
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('register')
+  const navigate = useNavigate()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -11,6 +17,22 @@ export default function Navbar() {
 
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
+  function openAuth(mode: 'login' | 'register') {
+    setAuthMode(mode)
+    setShowAuth(true)
+    setIsMobileMenuOpen(false)
+  }
+
+  function handleAuthSuccess() {
+    navigate('/dashboard')
+  }
+
+  useEffect(() => {
+    if (getToken()) {
+      navigate('/dashboard')
+    }
   }, [])
 
   return (
@@ -60,13 +82,19 @@ export default function Navbar() {
           </a>
         </div>
 
-        <div className="flex items-center gap-3">
-          <a
-            href="#start"
-            className="rounded-lg font-medium relative cursor-pointer hover:-translate-y-0.5 transition-all duration-200 inline-block text-center px-4 py-2 text-sm border bg-gradient-to-r from-green-600 to-emerald-600 border-green-400/30 text-white hover:from-green-500 hover:to-emerald-500"
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => openAuth('login')}
+            className="px-4 py-2 text-sm text-white/60 hover:text-white transition-colors"
+          >
+            Войти
+          </button>
+          <button
+            onClick={() => openAuth('register')}
+            className="rounded-lg font-medium cursor-pointer hover:-translate-y-0.5 transition-all duration-200 px-4 py-2 text-sm border bg-gradient-to-r from-green-600 to-emerald-600 border-green-400/30 text-white hover:from-green-500 hover:to-emerald-500"
           >
             Начать бесплатно
-          </a>
+          </button>
         </div>
       </header>
 
@@ -148,17 +176,30 @@ export default function Navbar() {
                 Академия
               </a>
               <div className="border-t border-white/20 pt-4 mt-4 flex flex-col space-y-3">
-                <a
-                  href="#start"
-                  onClick={() => setIsMobileMenuOpen(false)}
+                <button
+                  onClick={() => openAuth('login')}
+                  className="px-4 py-3 text-lg font-medium text-center rounded-lg transition-all duration-200 border border-white/20 text-white/70"
+                >
+                  Войти
+                </button>
+                <button
+                  onClick={() => openAuth('register')}
                   className="px-4 py-3 text-lg font-bold text-center rounded-lg transition-all duration-200 border bg-gradient-to-r from-green-600 to-emerald-600 border-green-400/30 text-white"
                 >
                   Начать бесплатно
-                </a>
+                </button>
               </div>
             </nav>
           </div>
         </div>
+      )}
+
+      {showAuth && (
+        <AuthModal
+          initialMode={authMode}
+          onClose={() => setShowAuth(false)}
+          onSuccess={handleAuthSuccess}
+        />
       )}
     </>
   )

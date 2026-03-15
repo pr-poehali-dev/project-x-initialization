@@ -1,7 +1,13 @@
+import { useState } from "react"
 import GradientBlinds from "@/components/GradientBlinds"
 import Navbar from "@/components/Navbar"
+import AuthModal from "@/components/AuthModal"
+import { useNavigate } from "react-router-dom"
 
 const Index = () => {
+  const [showAuth, setShowAuth] = useState(false)
+  const navigate = useNavigate()
+
   return (
     <main className="relative min-h-screen overflow-hidden">
       <Navbar />
@@ -44,7 +50,10 @@ const Index = () => {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 mt-4">
-                <button className="inline-flex items-center justify-center rounded-full bg-white px-8 py-4 text-lg font-semibold text-black transition-all hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent shadow-2xl">
+                <button
+                  onClick={() => setShowAuth(true)}
+                  className="inline-flex items-center justify-center rounded-full bg-white px-8 py-4 text-lg font-semibold text-black transition-all hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent shadow-2xl"
+                >
                   Создать проект бесплатно
                 </button>
                 <button className="inline-flex items-center justify-center rounded-full border-2 border-white/30 bg-white/10 px-8 py-4 text-lg font-semibold text-white backdrop-blur transition-all hover:bg-white/20 hover:border-white/50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent shadow-xl">
@@ -70,6 +79,13 @@ const Index = () => {
           </div>
         </div>
       </div>
+
+      {showAuth && (
+        <AuthModal
+          onClose={() => setShowAuth(false)}
+          onSuccess={() => navigate('/dashboard')}
+        />
+      )}
     </main>
   )
 }
