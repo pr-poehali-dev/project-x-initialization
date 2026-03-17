@@ -1,7 +1,7 @@
 {
   "tests": [
     {
-      "name": "Get profile without token",
+      "name": "List projects without token",
       "method": "GET",
       "path": "/",
       "expectedStatus": 401,
@@ -9,10 +9,10 @@
       "bodyMatcher": "partial"
     },
     {
-      "name": "Update profile without token",
-      "method": "PUT",
+      "name": "Create project without token",
+      "method": "POST",
       "path": "/",
-      "body": {"name": "Test"},
+      "body": {"title": "Test"},
       "expectedStatus": 401,
       "expectedBody": {"error": "string"},
       "bodyMatcher": "partial"

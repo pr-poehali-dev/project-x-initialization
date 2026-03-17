@@ -1,4 +1,6 @@
 {
+  "projects": "https://functions.poehali.dev/44ec16c4-c512-41d7-b25c-34186e9b2a3b",
+  "send-email": "https://functions.poehali.dev/615732fa-31a9-4c8d-abb4-6cab2441bde2",
   "auth-register": "https://functions.poehali.dev/07c33f51-f9f8-40df-8484-508a72da2b38",
   "auth-login": "https://functions.poehali.dev/62b19fda-97e2-4d50-84d6-04eaa606e5a6",
   "auth": "https://functions.poehali.dev/90705e17-88fc-4893-a4d0-82f2ac742d7e",

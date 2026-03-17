@@ -1,0 +1,13 @@
+{
+  "tests": [
+    {
+      "name": "Send email without key",
+      "method": "POST",
+      "path": "/",
+      "body": {"to": "test@example.com", "subject": "Test"},
+      "expectedStatus": 403,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    }
+  ]
+}
