@@ -1,5 +1,5 @@
 """
-Вход пользователя GrantRun.
+Вход пользователя Грантовый дайвинг.
 POST / — { email, password }
 """
 import json

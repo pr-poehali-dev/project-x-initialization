@@ -1,5 +1,5 @@
 """
-Регистрация нового пользователя GrantRun.
+Регистрация нового пользователя Грантовый дайвинг.
 POST / — { email, password, name, organization }
 После регистрации отправляет приветственное письмо.
 """
@@ -25,18 +25,18 @@ WELCOME_HTML = """
   <div style="max-width:480px;margin:0 auto;background:#111827;border-radius:16px;padding:40px;border:1px solid rgba(255,255,255,0.08);">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px;">
       <div style="width:32px;height:32px;background:linear-gradient(135deg,#22c55e,#10b981);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:14px;">G</div>
-      <span style="font-weight:600;font-size:18px;">GrantRun</span>
+      <span style="font-weight:600;font-size:18px;">Грантовый дайвинг</span>
     </div>
     <h2 style="color:#fff;margin:0 0 12px;font-size:22px;">Добро пожаловать, {name}!</h2>
     <p style="color:rgba(255,255,255,0.6);line-height:1.6;margin:0 0 24px;">
-      Вы успешно зарегистрировались на платформе GrantRun — умном наставнике для грантрайтеров.
+      Вы успешно зарегистрировались на платформе Грантовый дайвинг — умном наставнике для грантрайтеров.
       Теперь вы можете создавать проекты, заполнять проектные карты и готовиться к защите.
     </p>
     <a href="https://grantrun.ru/dashboard" style="display:inline-block;background:linear-gradient(135deg,#22c55e,#10b981);color:#fff;text-decoration:none;padding:14px 28px;border-radius:12px;font-weight:600;font-size:15px;">
       Перейти в кабинет →
     </a>
     <p style="color:rgba(255,255,255,0.3);font-size:12px;margin-top:32px;">
-      Если вы не регистрировались на GrantRun — просто проигнорируйте это письмо.
+      Если вы не регистрировались на Грантовый дайвинг — просто проигнорируйте это письмо.
     </p>
   </div>
 </body>
@@ -46,7 +46,7 @@ WELCOME_HTML = """
 def send_welcome(email: str, name: str, send_email_url: str, internal_key: str):
     payload = json.dumps({
         'to': email,
-        'subject': 'Добро пожаловать в GrantRun!',
+        'subject': 'Добро пожаловать в Грантовый дайвинг!',
         'html': WELCOME_HTML.replace('{name}', name)
     }).encode()
     req = urllib.request.Request(

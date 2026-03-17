@@ -53,7 +53,7 @@ export default function AuthModal({ onClose, onSuccess, initialMode = 'register'
 
         <div className="flex items-center gap-3 mb-6">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-sm font-bold">G</div>
-          <span className="text-white font-semibold text-lg">GrantRun</span>
+          <span className="text-white font-semibold text-lg">Грантовый дайвинг</span>
         </div>
 
         <h2 className="text-2xl font-bold text-white mb-1">

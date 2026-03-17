@@ -58,7 +58,7 @@ export default function Dashboard() {
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-xs font-bold">G</div>
-            <span className="text-white font-semibold">GrantRun</span>
+            <span className="text-white font-semibold">Грантовый дайвинг</span>
           </div>
           <div className="flex items-center gap-3">
             <button

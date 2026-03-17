@@ -26,7 +26,7 @@ def handler(event: dict, context) -> dict:
 
     body = json.loads(event.get('body') or '{}')
     to = body.get('to')
-    subject = body.get('subject', 'GrantRun')
+    subject = body.get('subject', 'Грантовый дайвинг')
     html = body.get('html', '')
 
     if not to:
@@ -36,7 +36,7 @@ def handler(event: dict, context) -> dict:
     smtp_port = int(os.environ.get('SMTP_PORT', '587'))
     smtp_user = os.environ.get('SMTP_USER', '')
     smtp_pass = os.environ.get('SMTP_PASS', '')
-    from_name = os.environ.get('SMTP_FROM_NAME', 'GrantRun')
+    from_name = os.environ.get('SMTP_FROM_NAME', 'Грантовый дайвинг')
 
     msg = MIMEMultipart('alternative')
     msg['Subject'] = subject
