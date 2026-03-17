@@ -17,55 +17,41 @@ const Index = () => {
     <main className="relative min-h-screen overflow-hidden" style={{ backgroundColor: "#2563EB" }}>
 
       {/* Rays background */}
-      <div className="absolute inset-0 w-full h-full">
+      <div className="absolute inset-0 w-full h-full" style={{ animation: "raysRotate 30s linear infinite", transformOrigin: "50% 50%" }}>
         <svg
           className="absolute inset-0 w-full h-full"
           viewBox="0 0 1440 900"
           preserveAspectRatio="xMidYMid slice"
           xmlns="http://www.w3.org/2000/svg"
         >
-          {[
-            [720, 450, -55],
-            [720, 450, -35],
-            [720, 450, -15],
-            [720, 450, 5],
-            [720, 450, 25],
-            [720, 450, 55],
-            [720, 450, 75],
-            [720, 450, 95],
-            [720, 450, 115],
-            [720, 450, 135],
-            [720, 450, 155],
-          ].map(([cx, cy, angle], i) => (
+          {[0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320, 340].map((angle, i) => (
             <line
               key={i}
-              x1={cx}
-              y1={cy}
-              x2={cx + 2000 * Math.cos((angle * Math.PI) / 180)}
-              y2={cy + 2000 * Math.sin((angle * Math.PI) / 180)}
-              stroke="rgba(255,255,255,0.07)"
-              strokeWidth="120"
-            />
-          ))}
-          {[
-            [720, 450, 235],
-            [720, 450, 255],
-            [720, 450, 275],
-            [720, 450, 295],
-            [720, 450, 315],
-          ].map(([cx, cy, angle], i) => (
-            <line
-              key={`b${i}`}
-              x1={cx}
-              y1={cy}
-              x2={cx + 2000 * Math.cos((angle * Math.PI) / 180)}
-              y2={cy + 2000 * Math.sin((angle * Math.PI) / 180)}
-              stroke="rgba(255,255,255,0.05)"
-              strokeWidth="120"
+              x1={720}
+              y1={450}
+              x2={720 + 2000 * Math.cos((angle * Math.PI) / 180)}
+              y2={450 + 2000 * Math.sin((angle * Math.PI) / 180)}
+              stroke={i % 2 === 0 ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.04)"}
+              strokeWidth="100"
             />
           ))}
         </svg>
       </div>
+
+      {/* Glow orb center */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "600px",
+          height: "600px",
+          background: "radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%)",
+          borderRadius: "50%",
+          animation: "glowPulse 4s ease-in-out infinite",
+        }}
+      />
 
       {/* Navbar */}
       <header className="relative z-20 flex items-center justify-between px-8 py-5">
