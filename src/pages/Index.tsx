@@ -56,12 +56,12 @@ const Index = () => {
       {/* Navbar */}
       <header className="relative z-20 flex items-center justify-between px-8 py-5">
         <a href="/" className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-lg bg-white flex items-center justify-center">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-          <span className="text-white font-bold text-xl tracking-tight">ГД!</span>
+          <img
+            src="https://cdn.poehali.dev/projects/21c1c609-db21-406e-b017-fd98879900e7/bucket/93e4dbc3-2940-479b-8ac0-6b26b4801bc0.png"
+            alt="Логотип"
+            className="w-9 h-9 invert"
+          />
+          <span className="text-white font-bold text-xl tracking-tight">Грантовый дайвинг</span>
         </a>
 
         <nav className="flex items-center gap-2">
