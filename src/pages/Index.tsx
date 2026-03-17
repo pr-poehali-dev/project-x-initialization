@@ -29,25 +29,25 @@ const Index = () => {
           position: "absolute", top: "5%", left: "10%",
           width: "600px", height: "600px", borderRadius: "50%",
           background: "rgba(124, 58, 237, 0.8)",
-          animation: "blob1 14s ease-in-out infinite",
+          animation: "blob1 7s ease-in-out infinite",
         }} />
         <div style={{
           position: "absolute", top: "20%", right: "5%",
           width: "700px", height: "700px", borderRadius: "50%",
           background: "rgba(16, 185, 129, 0.7)",
-          animation: "blob2 18s ease-in-out infinite",
+          animation: "blob2 9s ease-in-out infinite",
         }} />
         <div style={{
           position: "absolute", bottom: "0%", left: "25%",
           width: "650px", height: "650px", borderRadius: "50%",
           background: "rgba(239, 68, 68, 0.65)",
-          animation: "blob3 22s ease-in-out infinite",
+          animation: "blob3 11s ease-in-out infinite",
         }} />
         <div style={{
           position: "absolute", top: "40%", left: "40%",
           width: "500px", height: "500px", borderRadius: "50%",
           background: "rgba(245, 158, 11, 0.7)",
-          animation: "blob4 16s ease-in-out infinite",
+          animation: "blob4 8s ease-in-out infinite",
         }} />
       </div>
 
