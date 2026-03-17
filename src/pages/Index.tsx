@@ -59,7 +59,7 @@ const Index = () => {
           <img
             src="https://cdn.poehali.dev/projects/21c1c609-db21-406e-b017-fd98879900e7/bucket/93e4dbc3-2940-479b-8ac0-6b26b4801bc0.png"
             alt="Логотип"
-            className="w-9 h-9 invert"
+            className="w-9 h-9 invert rounded-md"
           />
           <span className="text-white text-xl tracking-tight font-semibold">Грантовый дайвинг</span>
         </a>
