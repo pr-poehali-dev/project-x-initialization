@@ -6,6 +6,33 @@ import Icon from '@/components/ui/icon'
 import { useTheme } from '@/hooks/useTheme'
 import { toast } from 'sonner'
 
+interface FieldProps {
+  label: string
+  value: string
+  onChange: (v: string) => void
+  placeholder?: string
+  type?: string
+  inputCls: string
+  inputStyle: React.CSSProperties
+  labelColor: string
+}
+
+function Field({ label, value, onChange, placeholder, type = 'text', inputCls, inputStyle, labelColor }: FieldProps) {
+  return (
+    <div>
+      <label className="block text-xs font-medium mb-1.5" style={{ color: labelColor }}>{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder}
+        className={inputCls}
+        style={inputStyle}
+      />
+    </div>
+  )
+}
+
 const EMPTY: Partial<UserProfile> = {
   name: '', full_name: '', organization: '', education: '',
   workplace: '', position: '', city: '', phone: '', pd_consent: false,
@@ -85,22 +112,6 @@ export default function EditProfile() {
   const inputCls = 'w-full rounded-xl px-4 py-3 text-sm outline-none transition-all'
   const inputStyle = { background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.text }
 
-  function Field({ label, field, placeholder, type = 'text' }: { label: string; field: keyof UserProfile; placeholder?: string; type?: string }) {
-    return (
-      <div>
-        <label className="block text-xs font-medium mb-1.5" style={{ color: t.textMuted }}>{label}</label>
-        <input
-          type={type}
-          value={(profile[field] as string) || ''}
-          onChange={e => set(field, e.target.value)}
-          placeholder={placeholder}
-          className={inputCls}
-          style={inputStyle}
-        />
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen transition-colors duration-300" style={{ background: t.bg }}>
       <header className="px-6 py-4 transition-colors duration-300"
@@ -147,7 +158,7 @@ export default function EditProfile() {
           style={{ background: t.cardBg, borderColor: t.cardBorder }}>
           <h2 className="text-sm font-semibold" style={{ color: t.text }}>Личные данные</h2>
 
-          <Field label="ФИО *" field="full_name" placeholder="Иванов Иван Иванович" />
+          <Field label="ФИО *" value={profile.full_name || ''} onChange={v => set('full_name', v)} placeholder="Иванов Иван Иванович" inputCls={inputCls} inputStyle={inputStyle} labelColor={t.textMuted} />
 
           <div>
             <label className="block text-xs font-medium mb-1.5" style={{ color: t.textMuted }}>Email</label>
@@ -156,8 +167,8 @@ export default function EditProfile() {
             <p className="text-xs mt-1" style={{ color: t.textMuted }}>Email изменить нельзя</p>
           </div>
 
-          <Field label="Телефон" field="phone" placeholder="+7 (900) 000-00-00" type="tel" />
-          <Field label="Город" field="city" placeholder="Москва" />
+          <Field label="Телефон" value={profile.phone || ''} onChange={v => set('phone', v)} placeholder="+7 (900) 000-00-00" type="tel" inputCls={inputCls} inputStyle={inputStyle} labelColor={t.textMuted} />
+          <Field label="Город" value={profile.city || ''} onChange={v => set('city', v)} placeholder="Москва" inputCls={inputCls} inputStyle={inputStyle} labelColor={t.textMuted} />
         </div>
 
         {/* Образование и работа */}
@@ -165,10 +176,10 @@ export default function EditProfile() {
           style={{ background: t.cardBg, borderColor: t.cardBorder }}>
           <h2 className="text-sm font-semibold" style={{ color: t.text }}>Образование и работа</h2>
 
-          <Field label="Образование" field="education" placeholder="Высшее, специальность..." />
-          <Field label="Организация / место работы" field="organization" placeholder="НКО, фонд, учреждение..." />
-          <Field label="Место работы (подробно)" field="workplace" placeholder="ООО Пример, Москва" />
-          <Field label="Должность" field="position" placeholder="Руководитель проектов" />
+          <Field label="Образование" value={profile.education || ''} onChange={v => set('education', v)} placeholder="Высшее, специальность..." inputCls={inputCls} inputStyle={inputStyle} labelColor={t.textMuted} />
+          <Field label="Организация / место работы" value={profile.organization || ''} onChange={v => set('organization', v)} placeholder="НКО, фонд, учреждение..." inputCls={inputCls} inputStyle={inputStyle} labelColor={t.textMuted} />
+          <Field label="Место работы (подробно)" value={profile.workplace || ''} onChange={v => set('workplace', v)} placeholder="ООО Пример, Москва" inputCls={inputCls} inputStyle={inputStyle} labelColor={t.textMuted} />
+          <Field label="Должность" value={profile.position || ''} onChange={v => set('position', v)} placeholder="Руководитель проектов" inputCls={inputCls} inputStyle={inputStyle} labelColor={t.textMuted} />
         </div>
 
         {/* Согласие на обработку ПД */}
