@@ -93,6 +93,14 @@ export default function Dashboard() {
               <Icon name="Home" size={15} />
               <span className="hidden sm:inline">Главная</span>
             </button>
+            <button
+              onClick={() => navigate('/events')}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-all duration-200"
+              style={{ color: t.textMuted }}
+            >
+              <Icon name="CalendarDays" size={15} />
+              <span className="hidden sm:inline">Мероприятия</span>
+            </button>
             {/* Theme toggle */}
             <button
               onClick={toggle}

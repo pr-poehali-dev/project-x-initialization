@@ -62,7 +62,13 @@ export default function EditProfile() {
             <img src="https://cdn.poehali.dev/projects/21c1c609-db21-406e-b017-fd98879900e7/bucket/93e4dbc3-2940-479b-8ac0-6b26b4801bc0.png" alt="Логотип" className="w-7 h-7 invert" />
             <span className="text-white font-semibold">Грантовый дайвинг</span>
           </div>
-          <div className="w-16" />
+          <button
+            onClick={() => navigate('/events')}
+            className="flex items-center gap-2 text-white/40 hover:text-white/70 transition-colors text-sm"
+          >
+            <Icon name="CalendarDays" size={16} />
+            <span className="hidden sm:inline">Мероприятия</span>
+          </button>
         </div>
       </header>
 

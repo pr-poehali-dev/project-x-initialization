@@ -5,6 +5,7 @@ const URLS = {
   login: func2url['auth-login'],
   me: func2url['me'],
   projects: func2url['projects'],
+  events: func2url['events'],
 }
 
 export function getToken() {
@@ -202,3 +203,42 @@ export interface FullProject {
 }
 
 export type Project = ProjectListItem
+
+export interface GrantEvent {
+  id: number
+  title: string
+  organizer: string
+  description: string
+  deadline: string | null
+  start_date: string | null
+  end_date: string | null
+  grant_amount: string
+  category: string
+  geography: string
+  target_audience: string
+  application_url: string
+  status: string
+  created_at: string
+}
+
+export async function apiGetEvents(params?: { category?: string; status?: string }) {
+  const qs = new URLSearchParams()
+  if (params?.category) qs.set('category', params.category)
+  if (params?.status) qs.set('status', params.status)
+  const url = qs.toString() ? `${URLS.events}?${qs}` : URLS.events
+  const res = await fetch(url)
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка загрузки мероприятий')
+  return json as GrantEvent[]
+}
+
+export async function apiCreateEvent(data: Partial<GrantEvent>) {
+  const res = await fetch(URLS.events, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify(data),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка создания мероприятия')
+  return json
+}
