@@ -50,7 +50,7 @@ export function ViewOrTextarea({ editing, displayValue, className = '', ...props
   if (!editing) {
     return (
       <div className="text-white text-sm py-2 whitespace-pre-wrap min-h-[36px]">
-        {displayValue ?? (props.value as string) || <span className="text-white/20">—</span>}
+        {(displayValue ?? (props.value as string)) || <span className="text-white/20">—</span>}
       </div>
     )
   }
