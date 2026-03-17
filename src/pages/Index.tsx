@@ -4,8 +4,14 @@ import { useNavigate } from "react-router-dom"
 import { getToken } from "@/lib/api"
 import Icon from "@/components/ui/icon"
 
+const NAV_LINKS = [
+  { href: '#about', label: 'О платформе' },
+  { href: '#features', label: 'Возможности' },
+]
+
 const Index = () => {
   const [showAuth, setShowAuth] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -42,17 +48,66 @@ const Index = () => {
       <div className="absolute pointer-events-none" style={{ top: "50vh", left: "50%", transform: "translate(-50%, -50%)", width: "600px", height: "600px", background: "radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%)", borderRadius: "50%", animation: "glowPulse 4s ease-in-out infinite" }} />
 
       {/* Navbar */}
-      <header className="relative z-20 flex items-center justify-between px-8 py-5">
+      <header className="relative z-20 flex items-center justify-between px-6 sm:px-8 py-5">
         <a href="/" className="flex items-center gap-2">
           <img src="https://cdn.poehali.dev/projects/21c1c609-db21-406e-b017-fd98879900e7/bucket/93e4dbc3-2940-479b-8ac0-6b26b4801bc0.png" alt="Логотип" className="w-9 h-9 invert rounded-md" />
-          <span className="text-white text-xl tracking-tight font-semibold">Грантовый дайвинг</span>
+          <span className="text-white text-lg sm:text-xl tracking-tight font-semibold">Грантовый дайвинг</span>
         </a>
-        <nav className="flex items-center gap-2">
-          <a href="#about" className="px-5 py-2.5 rounded-full text-sm font-medium transition-all" style={{ background: "rgba(255,255,255,0.18)", color: "white", backdropFilter: "blur(8px)" }}>О платформе</a>
-          <a href="#features" className="px-5 py-2.5 rounded-full text-sm font-medium transition-all" style={{ background: "rgba(255,255,255,0.18)", color: "white", backdropFilter: "blur(8px)" }}>Возможности</a>
+
+        {/* Desktop nav */}
+        <nav className="hidden sm:flex items-center gap-2">
+          {NAV_LINKS.map(l => (
+            <a key={l.href} href={l.href} className="px-5 py-2.5 rounded-full text-sm font-medium transition-all" style={{ background: "rgba(255,255,255,0.18)", color: "white", backdropFilter: "blur(8px)" }}>{l.label}</a>
+          ))}
           <button onClick={() => setShowAuth(true)} className="px-5 py-2.5 rounded-full text-sm font-medium transition-all" style={{ background: "rgba(255,255,255,0.18)", color: "white", backdropFilter: "blur(8px)" }}>Войти</button>
         </nav>
+
+        {/* Mobile controls */}
+        <div className="flex sm:hidden items-center gap-2">
+          <button
+            onClick={() => setShowAuth(true)}
+            className="w-10 h-10 rounded-full flex items-center justify-center transition-all"
+            style={{ background: "rgba(255,255,255,0.18)", backdropFilter: "blur(8px)" }}
+            aria-label="Войти"
+          >
+            <Icon name="LogIn" size={18} className="text-white" />
+          </button>
+          <button
+            onClick={() => setMenuOpen(v => !v)}
+            className="w-10 h-10 rounded-full flex items-center justify-center transition-all"
+            style={{ background: "rgba(255,255,255,0.18)", backdropFilter: "blur(8px)" }}
+            aria-label="Меню"
+          >
+            <Icon name={menuOpen ? "X" : "Menu"} size={18} className="text-white" />
+          </button>
+        </div>
       </header>
+
+      {/* Mobile dropdown menu */}
+      {menuOpen && (
+        <div
+          className="relative z-20 sm:hidden mx-4 mb-2 rounded-2xl overflow-hidden"
+          style={{ background: "rgba(255,255,255,0.12)", backdropFilter: "blur(16px)", border: "1px solid rgba(255,255,255,0.15)" }}
+        >
+          {NAV_LINKS.map(l => (
+            <a
+              key={l.href}
+              href={l.href}
+              onClick={() => setMenuOpen(false)}
+              className="block px-5 py-4 text-white text-sm font-medium border-b transition-all hover:bg-white/10"
+              style={{ borderColor: "rgba(255,255,255,0.1)" }}
+            >
+              {l.label}
+            </a>
+          ))}
+          <button
+            onClick={() => { setMenuOpen(false); setShowAuth(true) }}
+            className="w-full text-left px-5 py-4 text-white text-sm font-medium transition-all hover:bg-white/10"
+          >
+            Войти в личный кабинет
+          </button>
+        </div>
+      )}
 
       {/* Hero */}
       <div className="relative z-10 flex flex-col items-center justify-center text-center px-6" style={{ minHeight: "calc(100vh - 80px)" }}>
