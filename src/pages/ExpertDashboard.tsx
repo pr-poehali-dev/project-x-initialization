@@ -90,6 +90,14 @@ export default function ExpertDashboard() {
               <span className="hidden sm:inline">{dark ? 'Светлая' : 'Тёмная'}</span>
             </button>
             <button
+              onClick={() => navigate('/expert/profile')}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-all hover:opacity-70"
+              style={{ color: t.textMuted }}
+            >
+              <Icon name="UserCog" size={15} />
+              <span className="hidden sm:inline">Профиль</span>
+            </button>
+            <button
               onClick={handleLogout}
               className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-all hover:opacity-70"
               style={{ color: t.textMuted }}

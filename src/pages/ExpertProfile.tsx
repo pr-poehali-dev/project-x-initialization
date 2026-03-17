@@ -1,18 +1,18 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { apiGetMe, apiUpdateMe } from '@/lib/api'
-import type { UserProfile } from '@/lib/api'
+import { apiGetExpertMe, apiUpdateExpertProfile, removeExpertToken } from '@/lib/api'
+import type { ExpertProfile } from '@/lib/api'
 import Icon from '@/components/ui/icon'
 import { useTheme } from '@/hooks/useTheme'
 import { toast } from 'sonner'
 
-const EMPTY: Partial<UserProfile> = {
-  name: '', full_name: '', organization: '', education: '',
+const EMPTY: Partial<ExpertProfile> = {
+  name: '', full_name: '', specialization: '', education: '',
   workplace: '', position: '', city: '', phone: '', pd_consent: false,
 }
 
-export default function EditProfile() {
-  const [profile, setProfile] = useState<Partial<UserProfile>>(EMPTY)
+export default function ExpertProfilePage() {
+  const [profile, setProfile] = useState<Partial<ExpertProfile>>(EMPTY)
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -37,13 +37,13 @@ export default function EditProfile() {
   }
 
   useEffect(() => {
-    apiGetMe().then(u => {
-      if (!u) { navigate('/'); return }
+    apiGetExpertMe().then(u => {
+      if (!u) { navigate('/expert'); return }
       setEmail(u.email || '')
       setProfile({
         name: u.name || '',
         full_name: u.full_name || '',
-        organization: u.organization || '',
+        specialization: u.specialization || '',
         education: u.education || '',
         workplace: u.workplace || '',
         position: u.position || '',
@@ -55,7 +55,7 @@ export default function EditProfile() {
     })
   }, [navigate])
 
-  function set(key: keyof UserProfile, value: string | boolean) {
+  function set(key: keyof ExpertProfile, value: string | boolean) {
     setProfile(p => ({ ...p, [key]: value }))
   }
 
@@ -66,7 +66,7 @@ export default function EditProfile() {
     }
     setSaving(true)
     try {
-      await apiUpdateMe(profile)
+      await apiUpdateExpertProfile(profile)
       toast.success('Профиль сохранён')
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Ошибка')
@@ -85,7 +85,7 @@ export default function EditProfile() {
   const inputCls = 'w-full rounded-xl px-4 py-3 text-sm outline-none transition-all'
   const inputStyle = { background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.text }
 
-  function Field({ label, field, placeholder, type = 'text' }: { label: string; field: keyof UserProfile; placeholder?: string; type?: string }) {
+  function Field({ label, field, placeholder, type = 'text' }: { label: string; field: keyof ExpertProfile; placeholder?: string; type?: string }) {
     return (
       <div>
         <label className="block text-xs font-medium mb-1.5" style={{ color: t.textMuted }}>{label}</label>
@@ -106,7 +106,7 @@ export default function EditProfile() {
       <header className="px-6 py-4 transition-colors duration-300"
         style={{ background: t.headerBg, borderBottom: `1px solid ${t.headerBorder}`, backdropFilter: 'blur(12px)' }}>
         <div className="max-w-xl mx-auto flex items-center justify-between">
-          <button onClick={() => navigate('/dashboard')}
+          <button onClick={() => navigate('/expert/dashboard')}
             className="flex items-center gap-2 text-sm hover:opacity-70 transition-opacity"
             style={{ color: t.textMuted }}>
             <Icon name="ArrowLeft" size={16} />
@@ -116,6 +116,9 @@ export default function EditProfile() {
             <img src="https://cdn.poehali.dev/projects/21c1c609-db21-406e-b017-fd98879900e7/bucket/93e4dbc3-2940-479b-8ac0-6b26b4801bc0.png"
               alt="Логотип" className="w-7 h-7" style={{ filter: t.logoFilter }} />
             <span className="font-semibold" style={{ color: t.text }}>Грантовый дайвинг</span>
+            <span className="text-xs px-2 py-0.5 rounded-md font-medium ml-1" style={{ background: 'rgba(139,92,246,0.15)', color: '#a78bfa' }}>
+              Эксперт
+            </span>
           </div>
           <button onClick={toggle} className="px-3 py-2 rounded-xl text-sm transition-all"
             style={{ background: t.toggleBg, color: t.toggleColor }}>
@@ -126,19 +129,19 @@ export default function EditProfile() {
 
       <main className="max-w-xl mx-auto px-6 py-10">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold mb-1" style={{ color: t.text }}>Профиль участника</h1>
-          <p className="text-sm" style={{ color: t.textMuted }}>Данные используются в проектных картах и заявках</p>
+          <h1 className="text-2xl font-bold mb-1" style={{ color: t.text }}>Профиль эксперта</h1>
+          <p className="text-sm" style={{ color: t.textMuted }}>Данные видны участникам при получении экспертной оценки</p>
         </div>
 
         {/* Аватар */}
         <div className="flex items-center gap-4 rounded-2xl border p-5 mb-6 transition-colors duration-300"
           style={{ background: t.cardBg, borderColor: t.cardBorder }}>
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-500/30 to-emerald-600/30 border border-green-500/20 flex items-center justify-center text-2xl font-bold text-green-400 flex-shrink-0">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500/30 to-purple-600/30 border border-violet-500/20 flex items-center justify-center text-2xl font-bold text-violet-400 flex-shrink-0">
             {initials}
           </div>
           <div className="min-w-0">
             <div className="font-semibold truncate" style={{ color: t.text }}>{profile.full_name || profile.name || 'Имя не указано'}</div>
-            <div className="text-sm truncate" style={{ color: t.textMuted }}>{email}</div>
+            <div className="text-sm truncate" style={{ color: t.textMuted }}>{profile.specialization || email}</div>
           </div>
         </div>
 
@@ -166,9 +169,9 @@ export default function EditProfile() {
           <h2 className="text-sm font-semibold" style={{ color: t.text }}>Образование и работа</h2>
 
           <Field label="Образование" field="education" placeholder="Высшее, специальность..." />
-          <Field label="Организация / место работы" field="organization" placeholder="НКО, фонд, учреждение..." />
-          <Field label="Место работы (подробно)" field="workplace" placeholder="ООО Пример, Москва" />
-          <Field label="Должность" field="position" placeholder="Руководитель проектов" />
+          <Field label="Специализация" field="specialization" placeholder="Социальные проекты, НКО..." />
+          <Field label="Место работы" field="workplace" placeholder="ООО Пример, Москва" />
+          <Field label="Должность" field="position" placeholder="Консультант по грантам" />
         </div>
 
         {/* Согласие на обработку ПД */}
@@ -176,18 +179,12 @@ export default function EditProfile() {
           style={{ background: t.cardBg, borderColor: t.cardBorder }}>
           <label className="flex items-start gap-3 cursor-pointer">
             <div className="relative flex-shrink-0 mt-0.5">
-              <input
-                type="checkbox"
-                checked={profile.pd_consent || false}
-                onChange={e => set('pd_consent', e.target.checked)}
-                className="sr-only"
-              />
               <div
                 onClick={() => set('pd_consent', !profile.pd_consent)}
                 className="w-5 h-5 rounded flex items-center justify-center transition-all cursor-pointer"
                 style={{
-                  background: profile.pd_consent ? '#10b981' : t.inputBg,
-                  border: `2px solid ${profile.pd_consent ? '#10b981' : t.inputBorder}`,
+                  background: profile.pd_consent ? '#8b5cf6' : t.inputBg,
+                  border: `2px solid ${profile.pd_consent ? '#8b5cf6' : t.inputBorder}`,
                 }}
               >
                 {profile.pd_consent && <Icon name="Check" size={12} className="text-white" />}
@@ -204,7 +201,7 @@ export default function EditProfile() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="w-full rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 py-3 text-white text-sm font-semibold transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+          className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 py-3 text-white text-sm font-semibold transition-all disabled:opacity-50 flex items-center justify-center gap-2"
         >
           {saving && <Icon name="Loader2" size={15} className="animate-spin" />}
           {saving ? 'Сохраняем...' : 'Сохранить изменения'}

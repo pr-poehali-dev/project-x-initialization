@@ -57,7 +57,23 @@ export async function apiGetMe() {
   return res.json()
 }
 
-export async function apiUpdateMe(data: { name: string; organization?: string }) {
+export interface UserProfile {
+  id: number
+  email: string
+  name: string
+  organization: string
+  full_name: string
+  education: string
+  workplace: string
+  position: string
+  city: string
+  phone: string
+  pd_consent: boolean
+  is_admin?: boolean
+  created_at: string
+}
+
+export async function apiUpdateMe(data: Partial<UserProfile>) {
   const token = getToken()
   if (!token) throw new Error('Не авторизован')
   const res = await fetch(URLS.me, {
@@ -67,7 +83,34 @@ export async function apiUpdateMe(data: { name: string; organization?: string })
   })
   const json = await res.json()
   if (!res.ok) throw new Error(json.error || 'Ошибка обновления')
-  return json
+  return json as UserProfile
+}
+
+export async function apiUpdateExpertProfile(data: Partial<ExpertProfile>) {
+  const token = getExpertToken()
+  if (!token) throw new Error('Не авторизован')
+  const res = await fetch(URLS.expertAuth, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'X-Expert-Token': token },
+    body: JSON.stringify(data),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка обновления')
+  return json as ExpertProfile
+}
+
+export interface ExpertProfile {
+  id: number
+  email: string
+  name: string
+  specialization: string
+  full_name: string
+  education: string
+  workplace: string
+  position: string
+  city: string
+  phone: string
+  pd_consent: boolean
 }
 
 export async function apiGetProjects() {

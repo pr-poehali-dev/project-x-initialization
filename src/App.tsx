@@ -13,6 +13,7 @@ import Events from "./pages/Events";
 import ExpertLogin from "./pages/ExpertLogin";
 import ExpertDashboard from "./pages/ExpertDashboard";
 import ExpertProjectCard from "./pages/ExpertProjectCard";
+import ExpertProfile from "./pages/ExpertProfile";
 import TelegramCallback from "./pages/TelegramCallback";
 import AdminEvents from "./pages/AdminEvents";
 import NotFound from "./pages/NotFound";
@@ -35,6 +36,7 @@ const App = () => (
           <Route path="/expert" element={<ExpertLogin />} />
           <Route path="/expert/dashboard" element={<ExpertDashboard />} />
           <Route path="/expert/projects/:id" element={<ExpertProjectCard />} />
+          <Route path="/expert/profile" element={<ExpertProfile />} />
           <Route path="/auth/telegram/callback" element={<TelegramCallback />} />
           <Route path="/admin/events" element={<AdminEvents />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -1,8 +1,9 @@
 """
 Аутентификация экспертов Грантовый дайвинг.
-POST /register - регистрация эксперта { email, password, name, specialization }
-POST /login - вход { email, password }
-GET / - получить профиль эксперта по токену
+POST /register - регистрация { email, password, name, specialization }
+POST /login    - вход { email, password }
+GET /          - профиль эксперта по токену
+PUT /          - обновить расширенный профиль
 """
 import json
 import os
@@ -13,7 +14,7 @@ import psycopg2
 
 CORS = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, X-Expert-Token',
     'Content-Type': 'application/json',
 }
@@ -23,8 +24,22 @@ def get_conn():
     return psycopg2.connect(os.environ['DATABASE_URL'])
 
 
+def expert_row_to_dict(row) -> dict:
+    (eid, email, name, specialization,
+     full_name, education, workplace, position, city, phone,
+     pd_consent) = row
+    return {
+        'id': eid, 'email': email or '', 'name': name or '',
+        'specialization': specialization or '',
+        'full_name': full_name or '', 'education': education or '',
+        'workplace': workplace or '', 'position': position or '',
+        'city': city or '', 'phone': phone or '',
+        'pd_consent': bool(pd_consent),
+    }
+
+
 def handler(event: dict, context) -> dict:
-    """Регистрация, вход и профиль эксперта."""
+    """Регистрация, вход, профиль и обновление профиля эксперта."""
     if event.get('httpMethod') == 'OPTIONS':
         return {'statusCode': 200, 'headers': CORS, 'body': ''}
 
@@ -35,14 +50,15 @@ def handler(event: dict, context) -> dict:
     conn = get_conn()
     cur = conn.cursor()
 
-    # GET / - профиль по токену
+    # GET / — профиль по токену
     if method == 'GET':
         token = (event.get('headers') or {}).get('X-Expert-Token') or (event.get('headers') or {}).get('x-expert-token')
         if not token:
             conn.close()
             return {'statusCode': 401, 'headers': CORS, 'body': json.dumps({'error': 'Не авторизован'})}
         cur.execute(
-            """SELECT e.id, e.email, e.name, e.specialization
+            """SELECT e.id, e.email, e.name, e.specialization,
+                      e.full_name, e.education, e.workplace, e.position, e.city, e.phone, e.pd_consent
                FROM experts e JOIN expert_sessions s ON s.expert_id = e.id
                WHERE s.token = %s AND s.expires_at > NOW()""",
             (token,)
@@ -51,11 +67,60 @@ def handler(event: dict, context) -> dict:
         conn.close()
         if not row:
             return {'statusCode': 401, 'headers': CORS, 'body': json.dumps({'error': 'Сессия истекла'})}
-        return {
-            'statusCode': 200,
-            'headers': CORS,
-            'body': json.dumps({'id': row[0], 'email': row[1], 'name': row[2], 'specialization': row[3] or ''}),
-        }
+        return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(expert_row_to_dict(row))}
+
+    # PUT / — обновить профиль
+    if method == 'PUT':
+        token = (event.get('headers') or {}).get('X-Expert-Token') or (event.get('headers') or {}).get('x-expert-token')
+        if not token:
+            conn.close()
+            return {'statusCode': 401, 'headers': CORS, 'body': json.dumps({'error': 'Не авторизован'})}
+        cur.execute(
+            """SELECT e.id, e.pd_consent, e.pd_consent_at
+               FROM experts e JOIN expert_sessions s ON s.expert_id = e.id
+               WHERE s.token = %s AND s.expires_at > NOW()""",
+            (token,)
+        )
+        sess = cur.fetchone()
+        if not sess:
+            conn.close()
+            return {'statusCode': 401, 'headers': CORS, 'body': json.dumps({'error': 'Сессия истекла'})}
+        expert_id, old_pd, pd_at = sess
+
+        body = json.loads(event.get('body') or '{}')
+        new_pd = bool(body.get('pd_consent', old_pd))
+        if new_pd and not old_pd:
+            pd_at = datetime.now()
+
+        cur.execute(
+            """UPDATE experts SET
+               name=%s, specialization=%s, full_name=%s, education=%s,
+               workplace=%s, position=%s, city=%s, phone=%s,
+               pd_consent=%s, pd_consent_at=%s
+               WHERE id=%s""",
+            (
+                (body.get('name') or '').strip() or None,
+                (body.get('specialization') or '').strip() or None,
+                (body.get('full_name') or '').strip() or None,
+                (body.get('education') or '').strip() or None,
+                (body.get('workplace') or '').strip() or None,
+                (body.get('position') or '').strip() or None,
+                (body.get('city') or '').strip() or None,
+                (body.get('phone') or '').strip() or None,
+                new_pd, pd_at, expert_id,
+            )
+        )
+        conn.commit()
+
+        cur.execute(
+            """SELECT e.id, e.email, e.name, e.specialization,
+                      e.full_name, e.education, e.workplace, e.position, e.city, e.phone, e.pd_consent
+               FROM experts e WHERE e.id = %s""",
+            (expert_id,)
+        )
+        row = cur.fetchone()
+        conn.close()
+        return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(expert_row_to_dict(row))}
 
     if method == 'POST':
         body = json.loads(event.get('body') or '{}')
