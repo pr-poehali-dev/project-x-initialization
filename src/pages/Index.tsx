@@ -124,13 +124,7 @@ const Index = () => {
           >
             Начать бесплатно
           </button>
-          <button
-            onClick={() => setShowAuth(true)}
-            className="px-8 py-4 rounded-full font-semibold text-base text-white transition-all hover:bg-white/20"
-            style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)" }}
-          >
-            Войти в аккаунт
-          </button>
+
         </div>
       </div>
 
