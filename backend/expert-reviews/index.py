@@ -25,6 +25,9 @@ def get_conn():
 def json_serial(obj):
     if isinstance(obj, (date, datetime)):
         return obj.isoformat()
+    from decimal import Decimal
+    if isinstance(obj, Decimal):
+        return float(obj)
     raise TypeError(f"Type {type(obj)} not serializable")
 
 
