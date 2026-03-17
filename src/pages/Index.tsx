@@ -71,7 +71,7 @@ const Index = () => {
       </div>
 
       {/* ── О ПЛАТФОРМЕ ── */}
-      <section id="about" className="relative z-10 px-6 py-24 rounded-md" style={{ background: "rgba(0,0,0,0.15)" }}>
+      <section id="about" className="relative z-10 px-6 py-24 rounded-lg" style={{ background: "rgba(0,0,0,0.15)" }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <span className="inline-block px-4 py-1.5 rounded-full text-xs font-semibold text-white/60 uppercase tracking-widest mb-4" style={{ background: "rgba(255,255,255,0.08)" }}>О платформе</span>
