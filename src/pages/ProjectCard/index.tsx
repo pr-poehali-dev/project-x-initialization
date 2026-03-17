@@ -236,7 +236,7 @@ export default function ProjectCard() {
             {TABS.map(tab => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => { if (tab.id === 'expert' && editing) cancelEdit(); setActiveTab(tab.id) }}
                 className={`flex items-center gap-2 px-3 sm:px-4 py-3.5 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${
                   activeTab === tab.id
                     ? `border-green-500 ${dark ? 'text-green-400' : 'text-green-600'}`
