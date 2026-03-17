@@ -85,6 +85,14 @@ export default function Dashboard() {
             <span className="font-semibold transition-colors duration-300" style={{ color: t.text }}>Грантовый дайвинг</span>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/')}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-all duration-200"
+              style={{ color: t.textMuted }}
+            >
+              <Icon name="Home" size={15} />
+              <span className="hidden sm:inline">Главная</span>
+            </button>
             {/* Theme toggle */}
             <button
               onClick={toggle}
