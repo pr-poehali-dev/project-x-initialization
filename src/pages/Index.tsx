@@ -268,14 +268,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="relative z-10 px-6 py-8 text-center" style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }}>
-        <div className="flex items-center justify-center gap-2 mb-3">
-          <img src="https://cdn.poehali.dev/projects/21c1c609-db21-406e-b017-fd98879900e7/bucket/93e4dbc3-2940-479b-8ac0-6b26b4801bc0.png" alt="Логотип" className="w-5 h-5 invert" />
-          <span className="text-white/50 text-sm font-medium">Грантовый дайвинг</span>
-        </div>
-        <p className="text-white/30 text-xs">© 2026 — платформа для грантрайтеров и НКО</p>
-      </footer>
+
 
       {showAuth && (
         <AuthModal onClose={() => setShowAuth(false)} onSuccess={() => navigate('/dashboard')} />
