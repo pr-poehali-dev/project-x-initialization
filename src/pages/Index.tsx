@@ -1,82 +1,167 @@
-import { useState } from "react"
-import GradientBlinds from "@/components/GradientBlinds"
-import Navbar from "@/components/Navbar"
+import { useState, useEffect } from "react"
 import AuthModal from "@/components/AuthModal"
 import { useNavigate } from "react-router-dom"
+import { getToken } from "@/lib/api"
 
 const Index = () => {
   const [showAuth, setShowAuth] = useState(false)
   const navigate = useNavigate()
 
-  return (
-    <main className="relative min-h-screen overflow-hidden">
-      <Navbar />
+  useEffect(() => {
+    if (getToken()) {
+      navigate('/dashboard')
+    }
+  }, [])
 
-      {/* Animated Gradient Background */}
-      <div className="fixed inset-0 w-full h-full flex items-center justify-center">
-        <GradientBlinds
-          gradientColors={["#0f1629", "#1e3a8a", "#2563eb", "#1d4ed8"]}
-          angle={15}
-          noise={0.25}
-          blindCount={13}
-          blindMinWidth={50}
-          spotlightRadius={0.38}
-          spotlightSoftness={1.6}
-          spotlightOpacity={0.42}
-          mouseDampening={0.15}
-          distortAmount={0}
-          shineDirection="left"
-          mixBlendMode="overlay"
-        />
+  return (
+    <main className="relative min-h-screen overflow-hidden" style={{ backgroundColor: "#2563EB" }}>
+
+      {/* Rays background */}
+      <div className="absolute inset-0 w-full h-full">
+        <svg
+          className="absolute inset-0 w-full h-full"
+          viewBox="0 0 1440 900"
+          preserveAspectRatio="xMidYMid slice"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          {[
+            [720, 450, -55],
+            [720, 450, -35],
+            [720, 450, -15],
+            [720, 450, 5],
+            [720, 450, 25],
+            [720, 450, 55],
+            [720, 450, 75],
+            [720, 450, 95],
+            [720, 450, 115],
+            [720, 450, 135],
+            [720, 450, 155],
+          ].map(([cx, cy, angle], i) => (
+            <line
+              key={i}
+              x1={cx}
+              y1={cy}
+              x2={cx + 2000 * Math.cos((angle * Math.PI) / 180)}
+              y2={cy + 2000 * Math.sin((angle * Math.PI) / 180)}
+              stroke="rgba(255,255,255,0.07)"
+              strokeWidth="120"
+            />
+          ))}
+          {[
+            [720, 450, 235],
+            [720, 450, 255],
+            [720, 450, 275],
+            [720, 450, 295],
+            [720, 450, 315],
+          ].map(([cx, cy, angle], i) => (
+            <line
+              key={`b${i}`}
+              x1={cx}
+              y1={cy}
+              x2={cx + 2000 * Math.cos((angle * Math.PI) / 180)}
+              y2={cy + 2000 * Math.sin((angle * Math.PI) / 180)}
+              stroke="rgba(255,255,255,0.05)"
+              strokeWidth="120"
+            />
+          ))}
+        </svg>
       </div>
 
-      <div className="relative z-10 flex min-h-screen flex-col">
-        {/* Hero Section */}
-        <div className="flex-1 flex items-center justify-center">
-          <div className="flex items-center justify-center min-h-screen w-full px-5 sm:px-20">
-            <div className="relative z-10 flex max-w-4xl flex-col items-center gap-8 text-center">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm text-white/80 backdrop-blur mb-2">
-                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-                Умный наставник для грантрайтера
-              </div>
-
-              <h1 className="text-5xl font-bold leading-tight tracking-tight text-white md:text-7xl text-balance drop-shadow-2xl">
-                Доведи идею
-                <br />
-                до победы
-              </h1>
-              <p className="text-xl text-white/90 max-w-3xl text-pretty drop-shadow-lg">
-                Платформа для НКО и социальных проектов — от первой идеи до подачи заявки. Проектная карта, бета-защита с ИИ и экспертное ревью в одном месте.
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-4 mt-4">
-                <button
-                  onClick={() => setShowAuth(true)}
-                  className="inline-flex items-center justify-center rounded-full bg-white px-8 py-4 text-lg font-semibold text-black transition-all hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent shadow-2xl"
-                >
-                  Создать проект бесплатно
-                </button>
-                <button className="inline-flex items-center justify-center rounded-full border-2 border-white/30 bg-white/10 px-8 py-4 text-lg font-semibold text-white backdrop-blur transition-all hover:bg-white/20 hover:border-white/50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent shadow-xl">
-                  Как это работает
-                  <svg className="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-6 mt-6 text-white/60 text-sm">
-                <span className="flex items-center gap-2">
-                  <span className="text-green-400">✓</span> Бесплатный старт
-                </span>
-                <span className="flex items-center gap-2">
-                  <span className="text-green-400">✓</span> Шаблоны под ФПГ и Росмолодёжь
-                </span>
-                <span className="flex items-center gap-2">
-                  <span className="text-green-400">✓</span> ИИ-тренажёр защиты
-                </span>
-              </div>
-            </div>
+      {/* Navbar */}
+      <header className="relative z-20 flex items-center justify-between px-8 py-5">
+        <a href="/" className="flex items-center gap-2">
+          <div className="w-9 h-9 rounded-lg bg-white flex items-center justify-center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </div>
+          <span className="text-white font-bold text-xl tracking-tight">ГД!</span>
+        </a>
+
+        <nav className="flex items-center gap-2">
+          <a
+            href="#about"
+            className="px-5 py-2.5 rounded-full text-sm font-medium transition-all"
+            style={{ background: "rgba(255,255,255,0.18)", color: "white", backdropFilter: "blur(8px)" }}
+          >
+            О платформе
+          </a>
+          <a
+            href="#features"
+            className="px-5 py-2.5 rounded-full text-sm font-medium transition-all"
+            style={{ background: "rgba(255,255,255,0.18)", color: "white", backdropFilter: "blur(8px)" }}
+          >
+            Возможности
+          </a>
+          <button
+            onClick={() => setShowAuth(true)}
+            className="px-5 py-2.5 rounded-full text-sm font-medium transition-all"
+            style={{ background: "rgba(255,255,255,0.18)", color: "white", backdropFilter: "blur(8px)" }}
+          >
+            Войти
+          </button>
+        </nav>
+      </header>
+
+      {/* Hero content */}
+      <div className="relative z-10 flex flex-col items-center justify-center text-center px-6" style={{ minHeight: "calc(100vh - 80px)" }}>
+
+        {/* Badge */}
+        <div
+          className="mb-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm text-white font-medium"
+          style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.25)" }}
+        >
+          <span style={{ fontSize: "16px" }}>✳</span>
+          Привет, давай знакомиться!
+        </div>
+
+        {/* Main title */}
+        <h1 className="text-white font-black leading-none mb-4" style={{ fontSize: "clamp(52px, 9vw, 120px)", letterSpacing: "-0.02em" }}>
+          Грантовый дайвинг
+        </h1>
+
+        {/* Subtitle line with green pill */}
+        <div className="flex items-center justify-center gap-4 mb-10" style={{ fontSize: "clamp(32px, 5.5vw, 72px)" }}>
+          <span className="text-white font-bold" style={{ letterSpacing: "-0.02em" }}>портфолио</span>
+          <span
+            className="inline-flex items-center justify-center font-black text-white rounded-2xl"
+            style={{
+              background: "#4ADE80",
+              width: "clamp(48px, 6vw, 80px)",
+              height: "clamp(48px, 6vw, 80px)",
+              fontSize: "clamp(24px, 3.5vw, 48px)",
+              boxShadow: "0 0 40px rgba(74, 222, 128, 0.6)",
+              flexShrink: 0,
+            }}
+          >
+            &
+          </span>
+          <span className="text-white font-bold" style={{ letterSpacing: "-0.02em" }}>резюме</span>
+        </div>
+
+        {/* Description */}
+        <p className="text-white/70 text-center max-w-xl leading-relaxed" style={{ fontSize: "clamp(14px, 1.2vw, 17px)" }}>
+          Платформа для НКО и социальных проектов — от первой идеи до победы в гранте.
+          <br />
+          Проектная карта, бета-защита с ИИ и экспертное ревью в одном месте.
+        </p>
+
+        {/* CTA */}
+        <div className="flex flex-col sm:flex-row gap-3 mt-10">
+          <button
+            onClick={() => setShowAuth(true)}
+            className="px-8 py-4 rounded-full font-semibold text-base transition-all hover:scale-105"
+            style={{ background: "white", color: "#2563EB" }}
+          >
+            Начать бесплатно
+          </button>
+          <button
+            onClick={() => setShowAuth(true)}
+            className="px-8 py-4 rounded-full font-semibold text-base text-white transition-all hover:bg-white/20"
+            style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)" }}
+          >
+            Войти в аккаунт
+          </button>
         </div>
       </div>
 
