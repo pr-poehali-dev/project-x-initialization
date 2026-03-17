@@ -236,7 +236,7 @@ export default function Dashboard() {
         {/* Quick links */}
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
           {[
-            { title: 'Грант-Академия',  desc: 'Короткие уроки по написанию заявок', icon: 'GraduationCap' },
+            { title: 'Академия грантов',  desc: 'Образовательная платформа с курсами', icon: 'GraduationCap' },
             { title: 'Найти эксперта',  desc: 'Консультация и ревью проекта',        icon: 'Users' },
           ].map(item => (
             <div
