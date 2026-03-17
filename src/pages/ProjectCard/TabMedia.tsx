@@ -7,6 +7,7 @@ interface Props {
   media: MediaResource[]
   editing: boolean
   onChange: (media: MediaResource[]) => void
+  dark?: boolean
 }
 
 const YEARS = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() + i - 1)
@@ -30,7 +31,7 @@ function displayMonth(val: string): string {
   return `${mName} ${y}`
 }
 
-export default function TabMedia({ media, editing, onChange }: Props) {
+export default function TabMedia({ media, editing, onChange, dark = true }: Props) {
   function update(idx: number, field: keyof MediaResource, value: unknown) {
     onChange(media.map((m, i) => i === idx ? { ...m, [field]: value } : m))
   }
@@ -44,33 +45,47 @@ export default function TabMedia({ media, editing, onChange }: Props) {
   }
 
   if (media.length === 0 && !editing) {
-    return <p className="text-white/20 text-sm py-4">Медиа-ресурсы не добавлены</p>
+    return <p className="text-sm py-4" style={{ color: dark ? 'rgba(255,255,255,0.2)' : '#d1d5db' }}>Медиа-ресурсы не добавлены</p>
   }
+
+  const cardStyle = {
+    background: dark ? 'rgba(255,255,255,0.02)' : '#f9fafb',
+    border: `1px solid ${dark ? 'rgba(255,255,255,0.1)' : '#e5e7eb'}`,
+  }
+
+  const selectStyle = {
+    background: dark ? 'rgba(255,255,255,0.05)' : '#ffffff',
+    border: `1px solid ${dark ? 'rgba(255,255,255,0.1)' : '#d1d5db'}`,
+    color: dark ? '#ffffff' : '#111827',
+  }
+
+  const optionBg = dark ? '#1f2937' : '#ffffff'
 
   return (
     <div className="space-y-5">
       {media.map((item, idx) => (
-        <div key={idx} className="rounded-xl border border-white/10 p-5 space-y-4" style={{ background: 'rgba(255,255,255,0.02)' }}>
+        <div key={idx} className="rounded-xl p-5 space-y-4" style={cardStyle}>
           <div className="flex items-center justify-between mb-1">
-            <span className="text-white/40 text-xs font-medium uppercase tracking-wider">Ресурс {idx + 1}</span>
+            <span className="text-xs font-medium uppercase tracking-wider" style={{ color: dark ? 'rgba(255,255,255,0.4)' : '#9ca3af' }}>Ресурс {idx + 1}</span>
             {editing && (
-              <button onClick={() => remove(idx)} className="text-white/20 hover:text-red-400 transition-colors">
+              <button onClick={() => remove(idx)} className="hover:text-red-400 transition-colors" style={{ color: dark ? 'rgba(255,255,255,0.2)' : '#d1d5db' }}>
                 <Icon name="Trash2" size={15} />
               </button>
             )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FieldWrap label="Название ресурса">
+            <FieldWrap label="Название ресурса" dark={dark}>
               <ViewOrInput
                 editing={editing}
                 value={item.resource_name}
                 placeholder="Например: VK, Telegram, РИА Новости"
                 onChange={e => update(idx, 'resource_name', e.target.value)}
+                dark={dark}
               />
             </FieldWrap>
 
-            <FieldWrap label="Месяц публикации">
+            <FieldWrap label="Месяц публикации" dark={dark}>
               {editing ? (
                 <div className="flex gap-2">
                   <select
@@ -79,11 +94,12 @@ export default function TabMedia({ media, editing, onChange }: Props) {
                       const { year } = parseMonth(item.publication_month)
                       update(idx, 'publication_month', formatMonth(e.target.value, year))
                     }}
-                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-green-500/50"
+                    className="flex-1 rounded-xl px-3 py-2 text-sm focus:outline-none"
+                    style={selectStyle}
                   >
-                    <option value="" className="bg-gray-900">Месяц</option>
+                    <option value="" style={{ background: optionBg }}>Месяц</option>
                     {MONTHS.map((m, i) => (
-                      <option key={i} value={String(i + 1).padStart(2, '0')} className="bg-gray-900">{m}</option>
+                      <option key={i} value={String(i + 1).padStart(2, '0')} style={{ background: optionBg }}>{m}</option>
                     ))}
                   </select>
                   <select
@@ -92,49 +108,53 @@ export default function TabMedia({ media, editing, onChange }: Props) {
                       const { month } = parseMonth(item.publication_month)
                       update(idx, 'publication_month', formatMonth(month, e.target.value))
                     }}
-                    className="w-24 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-green-500/50"
+                    className="w-24 rounded-xl px-3 py-2 text-sm focus:outline-none"
+                    style={selectStyle}
                   >
-                    <option value="" className="bg-gray-900">Год</option>
+                    <option value="" style={{ background: optionBg }}>Год</option>
                     {YEARS.map(y => (
-                      <option key={y} value={String(y)} className="bg-gray-900">{y}</option>
+                      <option key={y} value={String(y)} style={{ background: optionBg }}>{y}</option>
                     ))}
                   </select>
                 </div>
               ) : (
-                <div className="text-white text-sm py-2">
-                  {item.publication_month ? displayMonth(item.publication_month) : <span className="text-white/20">—</span>}
+                <div className="text-sm py-2" style={{ color: dark ? '#ffffff' : '#111827' }}>
+                  {item.publication_month ? displayMonth(item.publication_month) : <span style={{ color: dark ? 'rgba(255,255,255,0.2)' : '#d1d5db' }}>—</span>}
                 </div>
               )}
             </FieldWrap>
 
-            <FieldWrap label="Планируемое количество просмотров">
+            <FieldWrap label="Планируемое количество просмотров" dark={dark}>
               <ViewOrInput
                 editing={editing}
                 type="number" min={0}
                 value={item.planned_views == null ? '' : String(item.planned_views)}
                 placeholder="0"
                 onChange={e => update(idx, 'planned_views', e.target.value === '' ? null : Number(e.target.value))}
+                dark={dark}
               />
             </FieldWrap>
           </div>
 
-          <FieldWrap label="Ссылки на ресурсы" hint="Несколько ссылок — через запятую или с новой строки">
+          <FieldWrap label="Ссылки на ресурсы" hint="Несколько ссылок — через запятую или с новой строки" dark={dark}>
             <ViewOrTextarea
               editing={editing}
               value={item.resource_links}
               rows={2}
               placeholder="https://..."
               onChange={e => update(idx, 'resource_links', e.target.value)}
+              dark={dark}
             />
           </FieldWrap>
 
-          <FieldWrap label="Почему выбран такой формат">
+          <FieldWrap label="Почему выбран такой формат" dark={dark}>
             <ViewOrTextarea
               editing={editing}
               value={item.format_reason}
               rows={2}
               placeholder="Обоснование выбора ресурса..."
               onChange={e => update(idx, 'format_reason', e.target.value)}
+              dark={dark}
             />
           </FieldWrap>
         </div>

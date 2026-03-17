@@ -6,6 +6,7 @@ interface Props {
   editing: boolean
   errors: Record<string, string>
   onChange: (field: keyof FullProject, value: string) => void
+  dark?: boolean
 }
 
 const FIELDS: { key: keyof FullProject; label: string; multiline?: boolean; rows?: number }[] = [
@@ -19,11 +20,11 @@ const FIELDS: { key: keyof FullProject; label: string; multiline?: boolean; rows
   { key: 'geography', label: 'География проекта', multiline: false },
 ]
 
-export default function TabAbout({ data, editing, errors, onChange }: Props) {
+export default function TabAbout({ data, editing, errors, onChange, dark = true }: Props) {
   return (
     <div className="space-y-5">
       {FIELDS.map(f => (
-        <FieldWrap key={f.key as string} label={f.label} error={errors[f.key as string]}>
+        <FieldWrap key={f.key as string} label={f.label} error={errors[f.key as string]} dark={dark}>
           {f.multiline ? (
             <ViewOrTextarea
               editing={editing}
@@ -31,6 +32,7 @@ export default function TabAbout({ data, editing, errors, onChange }: Props) {
               rows={f.rows}
               placeholder={`${f.label}...`}
               onChange={e => onChange(f.key, e.target.value)}
+              dark={dark}
             />
           ) : (
             <ViewOrInput
@@ -38,6 +40,7 @@ export default function TabAbout({ data, editing, errors, onChange }: Props) {
               value={(data[f.key] as string) ?? ''}
               placeholder={f.label}
               onChange={e => onChange(f.key, e.target.value)}
+              dark={dark}
             />
           )}
         </FieldWrap>
