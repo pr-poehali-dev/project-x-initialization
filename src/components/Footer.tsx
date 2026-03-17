@@ -87,7 +87,7 @@ export default function Footer() {
         {/* Bottom line */}
         <div className="mt-6 pt-4 text-center" style={{ borderTop: `1px solid ${divider}` }}>
           <p className="text-[11px]" style={{ color: textMuted }}>
-            © 2026 ООО «Меридиан Корп» — платформа для грантрайтеров и НКО
+            © 2026 ООО «Меридиан Корп» — входит в корпорацию экосистемных проектов «Даббл»
           </p>
         </div>
 
