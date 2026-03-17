@@ -106,24 +106,7 @@ const Index = () => {
           Грантовый дайвинг
         </h1>
 
-        {/* Subtitle line with green pill */}
-        <div className="flex items-center justify-center gap-4 mb-10" style={{ fontSize: "clamp(32px, 5.5vw, 72px)" }}>
-          <span className="text-white font-bold" style={{ letterSpacing: "-0.02em" }}>портфолио</span>
-          <span
-            className="inline-flex items-center justify-center font-black text-white rounded-2xl"
-            style={{
-              background: "#4ADE80",
-              width: "clamp(48px, 6vw, 80px)",
-              height: "clamp(48px, 6vw, 80px)",
-              fontSize: "clamp(24px, 3.5vw, 48px)",
-              boxShadow: "0 0 40px rgba(74, 222, 128, 0.6)",
-              flexShrink: 0,
-            }}
-          >
-            &
-          </span>
-          <span className="text-white font-bold" style={{ letterSpacing: "-0.02em" }}>резюме</span>
-        </div>
+
 
         {/* Description */}
         <p className="text-white/70 text-center max-w-xl leading-relaxed" style={{ fontSize: "clamp(14px, 1.2vw, 17px)" }}>
