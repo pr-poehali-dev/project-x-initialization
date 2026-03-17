@@ -55,7 +55,6 @@ export default function ProjectCard() {
   const [loading, setLoading] = useState(true)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [activeTab, setActiveTab] = useState('general')
-  const [expertEmail, setExpertEmail] = useState('')
   const [sendingToExpert, setSendingToExpert] = useState(false)
   const [expertReviews, setExpertReviews] = useState<ExpertAssignmentWithReviews[]>([])
   const [reviewsLoaded, setReviewsLoaded] = useState(false)
@@ -94,12 +93,11 @@ export default function ProjectCard() {
   }, [activeTab, id, reviewsLoaded])
 
   async function sendToExpert() {
-    if (!expertEmail.trim() || !id) return
+    if (!id) return
     setSendingToExpert(true)
     try {
-      await apiSubmitToExpert(Number(id), expertEmail)
-      toast.success('Проект отправлен эксперту!')
-      setExpertEmail('')
+      await apiSubmitToExpert(Number(id))
+      toast.success('Проект отправлен на экспертизу!')
       setReviewsLoaded(false)
       const updated = await apiGetProject(Number(id))
       setProject(updated)
@@ -328,43 +326,37 @@ export default function ProjectCard() {
 
         {activeTab === 'expert' && (
           <div>
-            {/* Отправить эксперту */}
-            {current.expert_status !== 'reviewed' && (
+            {/* Статус экспертизы */}
+            {current.expert_status === 'reviewed' ? (
+              <div className="flex items-center gap-2 rounded-xl border border-green-500/20 bg-green-500/5 px-4 py-3 text-green-400 text-sm mb-6">
+                <Icon name="CheckCircle" size={14} />
+                Экспертиза завершена — ознакомьтесь с оценками ниже
+              </div>
+            ) : current.expert_status === 'sent' ? (
+              <div className="flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-amber-400 text-sm mb-6">
+                <Icon name="Clock" size={14} />
+                Проект на проверке у эксперта — ожидайте обратную связь
+              </div>
+            ) : (
               <div
                 className="rounded-2xl border p-5 mb-6"
                 style={{ background: dark ? 'rgba(139,92,246,0.05)' : 'rgba(139,92,246,0.03)', borderColor: dark ? 'rgba(139,92,246,0.15)' : 'rgba(139,92,246,0.12)' }}
               >
-                <div className="flex items-center gap-2 mb-3">
-                  <Icon name="Send" size={15} className="text-violet-400" />
-                  <span className="text-sm font-semibold text-violet-400">Отправить на экспертизу</span>
+                <div className="flex items-center gap-2 mb-2">
+                  <Icon name="UserCheck" size={15} className="text-violet-400" />
+                  <span className="text-sm font-semibold text-violet-400">Экспертная оценка</span>
                 </div>
-                {current.expert_status === 'sent' && (
-                  <div className="flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-amber-400 text-xs mb-3">
-                    <Icon name="Clock" size={13} />
-                    Проект уже отправлен эксперту — ожидайте обратную связь
-                  </div>
-                )}
-                <p className="text-sm mb-3" style={{ color: t.textMuted }}>
-                  Укажите email зарегистрированного эксперта, чтобы отправить ему проект на проверку
+                <p className="text-sm mb-4" style={{ color: t.textMuted }}>
+                  Отправьте проект на проверку — система автоматически назначит свободного эксперта, который оценит каждый раздел и оставит комментарии.
                 </p>
-                <div className="flex gap-2">
-                  <input
-                    type="email"
-                    value={expertEmail}
-                    onChange={e => setExpertEmail(e.target.value)}
-                    placeholder="expert@example.com"
-                    className="flex-1 rounded-xl px-3 py-2.5 text-sm outline-none transition-all"
-                    style={{ background: dark ? 'rgba(255,255,255,0.05)' : '#f9fafb', border: `1px solid ${dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'}`, color: t.text }}
-                  />
-                  <button
-                    onClick={sendToExpert}
-                    disabled={sendingToExpert || !expertEmail.trim()}
-                    className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 px-4 py-2.5 text-white text-sm font-semibold transition-all disabled:opacity-50"
-                  >
-                    {sendingToExpert ? <Icon name="Loader2" size={14} className="animate-spin" /> : <Icon name="Send" size={14} />}
-                    Отправить
-                  </button>
-                </div>
+                <button
+                  onClick={sendToExpert}
+                  disabled={sendingToExpert}
+                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 px-5 py-2.5 text-white text-sm font-semibold transition-all disabled:opacity-50"
+                >
+                  {sendingToExpert ? <Icon name="Loader2" size={14} className="animate-spin" /> : <Icon name="Send" size={14} />}
+                  {sendingToExpert ? 'Отправляем...' : 'Отправить на экспертизу'}
+                </button>
               </div>
             )}
 

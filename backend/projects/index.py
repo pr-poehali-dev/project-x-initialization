@@ -289,29 +289,32 @@ def handler(event: dict, context) -> dict:
         conn.close()
         return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(project)}
 
-    # POST submit_expert — отправить проект эксперту по email
+    # POST submit_expert — случайно назначить эксперта из пула
     if method == 'POST' and params.get('action') == 'submit_expert':
+        import random
         if not project_id:
             conn.close()
             return {'statusCode': 400, 'headers': CORS, 'body': json.dumps({'error': 'Нужен id проекта'})}
-        body = json.loads(event.get('body') or '{}')
-        expert_email = (body.get('expert_email') or '').strip().lower()
-        if not expert_email:
-            conn.close()
-            return {'statusCode': 400, 'headers': CORS, 'body': json.dumps({'error': 'Укажите email эксперта'})}
 
         cur.execute("SELECT id FROM projects WHERE id=%s AND user_id=%s", (project_id, user_id))
         if not cur.fetchone():
             conn.close()
             return {'statusCode': 404, 'headers': CORS, 'body': json.dumps({'error': 'Проект не найден'})}
 
-        cur.execute("SELECT id FROM experts WHERE email=%s", (expert_email,))
-        expert_row = cur.fetchone()
-        if not expert_row:
+        # Получить всех экспертов, кроме уже назначенных на этот проект
+        cur.execute(
+            """SELECT id FROM experts
+               WHERE id NOT IN (
+                   SELECT expert_id FROM expert_assignments WHERE project_id=%s
+               )""",
+            (project_id,)
+        )
+        available = [row[0] for row in cur.fetchall()]
+        if not available:
             conn.close()
-            return {'statusCode': 404, 'headers': CORS, 'body': json.dumps({'error': 'Эксперт с таким email не найден'})}
+            return {'statusCode': 404, 'headers': CORS, 'body': json.dumps({'error': 'Нет доступных экспертов. Зарегистрируйтесь как эксперт или подождите.'})}
 
-        expert_id = expert_row[0]
+        expert_id = random.choice(available)
         cur.execute(
             """INSERT INTO expert_assignments (project_id, expert_id, status)
                VALUES (%s, %s, 'pending')

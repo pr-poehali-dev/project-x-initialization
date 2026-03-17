@@ -314,11 +314,11 @@ export async function apiCompleteExpertReview(assignment_id: number) {
   return json
 }
 
-export async function apiSubmitToExpert(projectId: number, expertEmail: string) {
+export async function apiSubmitToExpert(projectId: number) {
   const res = await fetch(`${URLS.projects}?action=submit_expert&id=${projectId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
-    body: JSON.stringify({ expert_email: expertEmail }),
+    body: JSON.stringify({}),
   })
   const json = await res.json()
   if (!res.ok) throw new Error(json.error || 'Ошибка отправки')
