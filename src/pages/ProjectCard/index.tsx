@@ -88,8 +88,8 @@ export default function ProjectCard() {
   useEffect(() => {
     if (activeTab === 'expert' && id && !reviewsLoaded) {
       apiGetProjectReviews(Number(id))
-        .then(r => { setExpertReviews(r); setReviewsLoaded(true) })
-        .catch(() => setReviewsLoaded(true))
+        .then(r => { setExpertReviews(Array.isArray(r) ? r : []); setReviewsLoaded(true) })
+        .catch(() => { setExpertReviews([]); setReviewsLoaded(true) })
     }
   }, [activeTab, id, reviewsLoaded])
 
