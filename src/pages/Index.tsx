@@ -23,29 +23,33 @@ const Index = () => {
   return (
     <main className="relative overflow-hidden" style={{ backgroundColor: "#2563EB" }}>
 
-      {/* Rays background — только на hero */}
-      <div className="absolute top-0 left-0 w-full h-screen" style={{ animation: "raysRotate 30s linear infinite", transformOrigin: "50% 50vh" }}>
-        <svg
-          className="absolute inset-0 w-full h-full"
-          viewBox="0 0 1440 900"
-          preserveAspectRatio="xMidYMid slice"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          {[0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320, 340].map((angle, i) => (
-            <line
-              key={i}
-              x1={720} y1={450}
-              x2={720 + 2000 * Math.cos((angle * Math.PI) / 180)}
-              y2={450 + 2000 * Math.sin((angle * Math.PI) / 180)}
-              stroke={i % 2 === 0 ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.04)"}
-              strokeWidth="100"
-            />
-          ))}
-        </svg>
+      {/* Blob-анимация в стиле Яндекс Музыки */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ filter: "blur(80px)" }}>
+        <div style={{
+          position: "absolute", top: "10%", left: "15%",
+          width: "500px", height: "500px", borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(99,179,237,0.55) 0%, transparent 70%)",
+          animation: "blob1 14s ease-in-out infinite",
+        }} />
+        <div style={{
+          position: "absolute", top: "30%", right: "10%",
+          width: "600px", height: "600px", borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(167,139,250,0.5) 0%, transparent 70%)",
+          animation: "blob2 18s ease-in-out infinite",
+        }} />
+        <div style={{
+          position: "absolute", bottom: "5%", left: "30%",
+          width: "550px", height: "550px", borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(52,211,153,0.4) 0%, transparent 70%)",
+          animation: "blob3 22s ease-in-out infinite",
+        }} />
+        <div style={{
+          position: "absolute", top: "50%", left: "50%",
+          width: "400px", height: "400px", borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(251,191,36,0.35) 0%, transparent 70%)",
+          animation: "blob4 16s ease-in-out infinite",
+        }} />
       </div>
-
-      {/* Glow */}
-      <div className="absolute pointer-events-none" style={{ top: "50vh", left: "50%", transform: "translate(-50%, -50%)", width: "600px", height: "600px", background: "radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%)", borderRadius: "50%", animation: "glowPulse 4s ease-in-out infinite" }} />
 
       {/* Navbar */}
       <header className="relative z-20 flex items-center justify-between px-6 sm:px-8 py-5">
