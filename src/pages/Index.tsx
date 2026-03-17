@@ -61,7 +61,7 @@ const Index = () => {
             alt="Логотип"
             className="w-9 h-9 invert"
           />
-          <span className="text-white font-bold text-xl tracking-tight">Грантовый дайвинг</span>
+          <span className="text-white text-xl tracking-tight font-semibold">Грантовый дайвинг</span>
         </a>
 
         <nav className="flex items-center gap-2">
