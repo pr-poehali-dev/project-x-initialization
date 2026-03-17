@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { setToken } from '@/lib/api'
 import func2url from '../../backend/func2url.json'
 
-const AUTH_URL = func2url['telegram-bot-telegram-auth']
+const AUTH_URL = func2url['telegram-login']
 
 export default function TelegramCallback() {
   const [searchParams] = useSearchParams()
@@ -19,7 +19,7 @@ export default function TelegramCallback() {
       return
     }
 
-    fetch(`${AUTH_URL}?action=callback`, {
+    fetch(AUTH_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token }),
