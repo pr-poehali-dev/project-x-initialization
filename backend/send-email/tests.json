@@ -8,6 +8,20 @@
       "expectedStatus": 403,
       "expectedBody": {"error": "string"},
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "Send test email",
+      "method": "POST",
+      "path": "/",
+      "headers": {"X-Internal-Key": "${INTERNAL_API_KEY}"},
+      "body": {
+        "to": "21289119@mail.ru",
+        "subject": "Тест — Грантовый дайвинг",
+        "html": "<h2>Всё работает!</h2><p>Это тестовое письмо от платформы <b>Грантовый дайвинг</b>.</p>"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {"ok": true},
+      "bodyMatcher": "partial"
     }
   ]
 }
