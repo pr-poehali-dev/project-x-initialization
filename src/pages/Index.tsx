@@ -56,10 +56,6 @@ const Index = () => {
 
       {/* Hero */}
       <div className="relative z-10 flex flex-col items-center justify-center text-center px-6" style={{ minHeight: "calc(100vh - 80px)" }}>
-        <div className="mb-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm text-white font-medium" style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.25)" }}>
-          <span style={{ fontSize: "16px" }}>✳</span>
-          Привет, давай знакомиться!
-        </div>
         <h1 className="text-white font-black leading-none mb-4" style={{ fontSize: "clamp(52px, 9vw, 120px)", letterSpacing: "-0.02em" }}>
           Грантовый дайвинг
         </h1>
