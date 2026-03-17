@@ -328,9 +328,27 @@ export default function ProjectCard() {
           <div>
             {/* Статус экспертизы */}
             {current.expert_status === 'reviewed' ? (
-              <div className="flex items-center gap-2 rounded-xl border border-green-500/20 bg-green-500/5 px-4 py-3 text-green-400 text-sm mb-6">
-                <Icon name="CheckCircle" size={14} />
-                Экспертиза завершена — ознакомьтесь с оценками ниже
+              <div className="mb-6 space-y-3">
+                <div className="flex items-center gap-2 rounded-xl border border-green-500/20 bg-green-500/5 px-4 py-3 text-green-400 text-sm">
+                  <Icon name="CheckCircle" size={14} />
+                  Экспертиза завершена — ознакомьтесь с оценками ниже
+                </div>
+                <div
+                  className="rounded-xl p-4 border"
+                  style={{ background: dark ? 'rgba(139,92,246,0.05)' : 'rgba(139,92,246,0.03)', borderColor: dark ? 'rgba(139,92,246,0.15)' : 'rgba(139,92,246,0.12)' }}
+                >
+                  <p className="text-sm mb-3" style={{ color: t.textMuted }}>
+                    Хотите получить мнение ещё одного эксперта? Запросите повторную экспертизу.
+                  </p>
+                  <button
+                    onClick={sendToExpert}
+                    disabled={sendingToExpert}
+                    className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 px-4 py-2 text-white text-sm font-semibold transition-all disabled:opacity-50"
+                  >
+                    {sendingToExpert ? <Icon name="Loader2" size={14} className="animate-spin" /> : <Icon name="RefreshCw" size={14} />}
+                    Запросить повторную экспертизу
+                  </button>
+                </div>
               </div>
             ) : current.expert_status === 'sent' ? (
               <div className="flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-amber-400 text-sm mb-6">

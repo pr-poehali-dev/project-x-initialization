@@ -18,18 +18,24 @@ const SECTIONS = [
   { id: 'expenses', label: 'Расходы',            icon: 'Wallet' },
 ]
 
-function ScoreButton({ score, current, onClick }: { score: number; current: number | null; onClick: (s: number) => void }) {
+function ScoreButton({ score, current, onClick, dark }: { score: number; current: number | null; onClick: (s: number) => void; dark: boolean }) {
   const active = current === score
   const color = score <= 3 ? 'red' : score <= 6 ? 'amber' : 'green'
-  const styles: Record<string, { active: string; hover: string }> = {
-    red:   { active: 'bg-red-500 border-red-500 text-white',   hover: 'hover:border-red-400 hover:text-red-400' },
-    amber: { active: 'bg-amber-500 border-amber-500 text-white', hover: 'hover:border-amber-400 hover:text-amber-400' },
-    green: { active: 'bg-green-500 border-green-500 text-white', hover: 'hover:border-green-400 hover:text-green-400' },
+  const activeStyles: Record<string, string> = {
+    red:   'bg-red-500 border-red-500 text-white',
+    amber: 'bg-amber-500 border-amber-500 text-white',
+    green: 'bg-green-500 border-green-500 text-white',
   }
+  const hoverStyles: Record<string, string> = {
+    red:   'hover:border-red-400 hover:text-red-500',
+    amber: 'hover:border-amber-400 hover:text-amber-500',
+    green: 'hover:border-green-400 hover:text-green-600',
+  }
+  const inactiveBase = dark ? 'border-white/10 text-white/30' : 'border-gray-300 text-gray-400'
   return (
     <button
       onClick={() => onClick(active ? 0 : score)}
-      className={`w-8 h-8 rounded-lg border text-xs font-bold transition-all ${active ? styles[color].active : `border-white/10 text-white/30 ${styles[color].hover}`}`}
+      className={`w-8 h-8 rounded-lg border text-xs font-bold transition-all ${active ? activeStyles[color] : `${inactiveBase} ${hoverStyles[color]}`}`}
     >
       {score}
     </button>
@@ -63,6 +69,7 @@ function ReviewBlock({
               key={s}
               score={s}
               current={review.score}
+              dark={dark}
               onClick={v => onChange(sectionId, { score: v || null })}
             />
           ))}
@@ -300,10 +307,18 @@ export default function ExpertProjectCard() {
       </div>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
-        {reviewed && (
+        {reviewed ? (
           <div className="mb-6 flex items-center gap-2 rounded-xl border border-green-500/20 bg-green-500/5 px-4 py-3 text-green-400 text-sm">
             <Icon name="CheckCircle" size={14} />
             Экспертиза завершена. Участник получил вашу обратную связь.
+          </div>
+        ) : (
+          <div
+            className="mb-6 flex items-start gap-2 rounded-xl px-4 py-3 text-sm"
+            style={{ background: dark ? 'rgba(139,92,246,0.08)' : 'rgba(139,92,246,0.06)', border: `1px solid ${dark ? 'rgba(139,92,246,0.2)' : 'rgba(139,92,246,0.15)'}`, color: dark ? '#c4b5fd' : '#7c3aed' }}
+          >
+            <Icon name="Info" size={15} className="flex-shrink-0 mt-0.5" />
+            <span>После оценки каждого раздела нажимайте <strong>«Сохранить»</strong> в шапке. Когда все разделы оценены — нажмите <strong>«Завершить оценку»</strong>.</span>
           </div>
         )}
 
