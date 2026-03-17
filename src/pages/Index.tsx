@@ -24,29 +24,29 @@ const Index = () => {
     <main className="relative overflow-hidden" style={{ backgroundColor: "#2563EB" }}>
 
       {/* Blob-анимация в стиле Яндекс Музыки */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ filter: "blur(80px)" }}>
+      <div className="absolute top-0 left-0 w-full h-screen overflow-hidden pointer-events-none" style={{ filter: "blur(60px)" }}>
         <div style={{
-          position: "absolute", top: "10%", left: "15%",
-          width: "500px", height: "500px", borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(99,179,237,0.55) 0%, transparent 70%)",
+          position: "absolute", top: "5%", left: "10%",
+          width: "600px", height: "600px", borderRadius: "50%",
+          background: "rgba(124, 58, 237, 0.8)",
           animation: "blob1 14s ease-in-out infinite",
         }} />
         <div style={{
-          position: "absolute", top: "30%", right: "10%",
-          width: "600px", height: "600px", borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(167,139,250,0.5) 0%, transparent 70%)",
+          position: "absolute", top: "20%", right: "5%",
+          width: "700px", height: "700px", borderRadius: "50%",
+          background: "rgba(16, 185, 129, 0.7)",
           animation: "blob2 18s ease-in-out infinite",
         }} />
         <div style={{
-          position: "absolute", bottom: "5%", left: "30%",
-          width: "550px", height: "550px", borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(52,211,153,0.4) 0%, transparent 70%)",
+          position: "absolute", bottom: "0%", left: "25%",
+          width: "650px", height: "650px", borderRadius: "50%",
+          background: "rgba(239, 68, 68, 0.65)",
           animation: "blob3 22s ease-in-out infinite",
         }} />
         <div style={{
-          position: "absolute", top: "50%", left: "50%",
-          width: "400px", height: "400px", borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(251,191,36,0.35) 0%, transparent 70%)",
+          position: "absolute", top: "40%", left: "40%",
+          width: "500px", height: "500px", borderRadius: "50%",
+          background: "rgba(245, 158, 11, 0.7)",
           animation: "blob4 16s ease-in-out infinite",
         }} />
       </div>
