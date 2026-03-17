@@ -13,6 +13,7 @@ import Events from "./pages/Events";
 import ExpertLogin from "./pages/ExpertLogin";
 import ExpertDashboard from "./pages/ExpertDashboard";
 import ExpertProjectCard from "./pages/ExpertProjectCard";
+import TelegramCallback from "./pages/TelegramCallback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
           <Route path="/expert" element={<ExpertLogin />} />
           <Route path="/expert/dashboard" element={<ExpertDashboard />} />
           <Route path="/expert/projects/:id" element={<ExpertProjectCard />} />
+          <Route path="/auth/telegram/callback" element={<TelegramCallback />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -324,6 +324,23 @@ def handler(event: dict, context) -> dict:
             return handle_send_photo(body)
         elif action == "test" and method == "POST":
             return handle_test(body)
+        elif action == "get-config":
+            return cors_response(200, {
+                "bot_username": os.environ.get("TELEGRAM_BOT_USERNAME", ""),
+            })
+        elif action == "set-webhook" and method == "POST":
+            import requests as req
+            bot_token = get_bot_token()
+            webhook_url = os.environ.get("SITE_URL", "").rstrip("/")
+            # URL самой функции бота берём из переменной или body
+            func_url = body.get("url", "")
+            webhook_secret = os.environ.get("TELEGRAM_WEBHOOK_SECRET", "")
+            r = req.post(
+                f"https://api.telegram.org/bot{bot_token}/setWebhook",
+                json={"url": func_url, "secret_token": webhook_secret},
+                timeout=10
+            )
+            return cors_response(r.status_code, r.json())
         else:
             return cors_response(400, {"error": f"Unknown action: {action}"})
 
