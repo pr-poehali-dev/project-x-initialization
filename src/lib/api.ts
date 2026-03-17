@@ -381,3 +381,24 @@ export async function apiCreateEvent(data: Partial<GrantEvent>) {
   if (!res.ok) throw new Error(json.error || 'Ошибка создания мероприятия')
   return json
 }
+
+export async function apiUpdateEvent(id: number, data: Partial<GrantEvent>) {
+  const res = await fetch(`${URLS.events}?id=${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify(data),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка обновления')
+  return json
+}
+
+export async function apiDeleteEvent(id: number) {
+  const res = await fetch(`${URLS.events}?id=${id}`, {
+    method: 'DELETE',
+    headers: { ...authHeaders() },
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка удаления')
+  return json
+}
