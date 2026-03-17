@@ -52,7 +52,7 @@ export default function AuthModal({ onClose, onSuccess, initialMode = 'register'
         </button>
 
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-sm font-bold">G</div>
+          <img src="https://cdn.poehali.dev/projects/21c1c609-db21-406e-b017-fd98879900e7/bucket/93e4dbc3-2940-479b-8ac0-6b26b4801bc0.png" alt="Логотип" className="w-8 h-8 invert" />
           <span className="text-white font-semibold text-lg">Грантовый дайвинг</span>
         </div>
 
