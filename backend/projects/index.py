@@ -1,9 +1,11 @@
 """
 CRUD для полной проектной карты Грантовый дайвинг.
-GET / — список проектов пользователя
-POST / — создать проект
-GET /?id=N — получить полную карту проекта (с командой, задачами, медиа, расходами)
-PUT /?id=N — обновить полную карту проекта
+GET / - список проектов пользователя
+POST / - создать проект
+GET /?id=N - получить полную карту проекта (с командой, задачами, медиа, расходами)
+PUT /?id=N - обновить полную карту проекта
+POST /?action=submit_expert&id=N - отправить проект на экспертизу { expert_email }
+GET /?action=reviews&id=N - получить оценки эксперта по проекту
 """
 import json
 import os
@@ -39,7 +41,7 @@ def get_full_project(cur, project_id, user_id):
                   budget,grant_fund,deadline,status,created_at,updated_at,
                   scale,start_date,end_date,short_description,geography,experience,prospects,
                   results_events_count,results_deadline,results_participants_count,
-                  results_publications_count,results_views_count
+                  results_publications_count,results_views_count,expert_status
            FROM projects WHERE id=%s AND user_id=%s""",
         (project_id, user_id)
     )
@@ -69,6 +71,7 @@ def get_full_project(cur, project_id, user_id):
         'results_participants_count': row[23],
         'results_publications_count': row[24],
         'results_views_count': row[25],
+        'expert_status': row[26],
     }
 
     cur.execute(
@@ -285,6 +288,83 @@ def handler(event: dict, context) -> dict:
         project = get_full_project(cur, project_id, user_id)
         conn.close()
         return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(project)}
+
+    # POST submit_expert — отправить проект эксперту по email
+    if method == 'POST' and params.get('action') == 'submit_expert':
+        if not project_id:
+            conn.close()
+            return {'statusCode': 400, 'headers': CORS, 'body': json.dumps({'error': 'Нужен id проекта'})}
+        body = json.loads(event.get('body') or '{}')
+        expert_email = (body.get('expert_email') or '').strip().lower()
+        if not expert_email:
+            conn.close()
+            return {'statusCode': 400, 'headers': CORS, 'body': json.dumps({'error': 'Укажите email эксперта'})}
+
+        cur.execute("SELECT id FROM projects WHERE id=%s AND user_id=%s", (project_id, user_id))
+        if not cur.fetchone():
+            conn.close()
+            return {'statusCode': 404, 'headers': CORS, 'body': json.dumps({'error': 'Проект не найден'})}
+
+        cur.execute("SELECT id FROM experts WHERE email=%s", (expert_email,))
+        expert_row = cur.fetchone()
+        if not expert_row:
+            conn.close()
+            return {'statusCode': 404, 'headers': CORS, 'body': json.dumps({'error': 'Эксперт с таким email не найден'})}
+
+        expert_id = expert_row[0]
+        cur.execute(
+            """INSERT INTO expert_assignments (project_id, expert_id, status)
+               VALUES (%s, %s, 'pending')
+               ON CONFLICT (project_id, expert_id)
+               DO UPDATE SET status='pending', assigned_at=NOW(), reviewed_at=NULL""",
+            (project_id, expert_id)
+        )
+        cur.execute(
+            "UPDATE projects SET expert_status='sent', updated_at=NOW() WHERE id=%s",
+            (project_id,)
+        )
+        conn.commit()
+        conn.close()
+        return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'ok': True})}
+
+    # GET reviews — получить оценки эксперта по проекту участника
+    if method == 'GET' and params.get('action') == 'reviews':
+        if not project_id:
+            conn.close()
+            return {'statusCode': 400, 'headers': CORS, 'body': json.dumps({'error': 'Нужен id проекта'})}
+
+        cur.execute(
+            """SELECT ea.id, ea.status, ea.assigned_at, ea.reviewed_at,
+                      e.name as expert_name, e.specialization
+               FROM expert_assignments ea
+               JOIN experts e ON e.id = ea.expert_id
+               WHERE ea.project_id=%s AND ea.expert_id IN (
+                   SELECT expert_id FROM expert_assignments WHERE project_id=%s
+               )
+               ORDER BY ea.assigned_at DESC""",
+            (project_id, project_id)
+        )
+        assignments = []
+        for row in cur.fetchall():
+            assignment_id, status, assigned_at, reviewed_at, expert_name, specialization = row
+            cur.execute(
+                "SELECT section, feedback, score FROM expert_reviews WHERE assignment_id=%s",
+                (assignment_id,)
+            )
+            reviews = {}
+            for r in cur.fetchall():
+                reviews[r[0]] = {'feedback': r[1] or '', 'score': r[2]}
+            assignments.append({
+                'assignment_id': assignment_id,
+                'status': status,
+                'assigned_at': assigned_at.isoformat() if assigned_at else None,
+                'reviewed_at': reviewed_at.isoformat() if reviewed_at else None,
+                'expert_name': expert_name,
+                'specialization': specialization or '',
+                'reviews': reviews,
+            })
+        conn.close()
+        return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(assignments)}
 
     conn.close()
     return {'statusCode': 405, 'headers': CORS, 'body': json.dumps({'error': 'Метод не поддерживается'})}

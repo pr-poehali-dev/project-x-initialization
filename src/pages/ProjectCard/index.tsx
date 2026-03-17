@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import Icon from '@/components/ui/icon'
-import { apiGetProject, apiUpdateProject } from '@/lib/api'
-import type { FullProject } from '@/lib/api'
+import { apiGetProject, apiUpdateProject, apiSubmitToExpert, apiGetProjectReviews } from '@/lib/api'
+import type { FullProject, ExpertAssignmentWithReviews } from '@/lib/api'
 import { emptyProject } from './types'
 import { useTheme } from '@/hooks/useTheme'
 import TabGeneral from './TabGeneral'
@@ -22,7 +22,13 @@ const TABS = [
   { id: 'calendar', label: 'Календарный план', icon: 'CalendarDays' },
   { id: 'media', label: 'Медиа', icon: 'Megaphone' },
   { id: 'expenses', label: 'Расходы', icon: 'Wallet' },
+  { id: 'expert', label: 'Экспертиза', icon: 'UserCheck' },
 ]
+
+const SECTION_LABELS: Record<string, string> = {
+  general: 'Общее', about: 'О проекте', team: 'Команда',
+  results: 'Результаты', calendar: 'Календарный план', media: 'Медиа', expenses: 'Расходы',
+}
 
 const STATUS_LABEL: Record<string, { label: string; darkColor: string; lightColor: string }> = {
   draft: { label: 'Черновик', darkColor: 'text-white/40 bg-white/5', lightColor: 'text-gray-400 bg-gray-100' },
@@ -49,6 +55,10 @@ export default function ProjectCard() {
   const [loading, setLoading] = useState(true)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [activeTab, setActiveTab] = useState('general')
+  const [expertEmail, setExpertEmail] = useState('')
+  const [sendingToExpert, setSendingToExpert] = useState(false)
+  const [expertReviews, setExpertReviews] = useState<ExpertAssignmentWithReviews[]>([])
+  const [reviewsLoaded, setReviewsLoaded] = useState(false)
 
   const t = {
     bg:         dark ? '#0a0f1e'                   : '#f5f7fa',
@@ -74,6 +84,32 @@ export default function ProjectCard() {
       .then(p => { setProject(p); setDraft(p); setLoading(false) })
       .catch(() => { navigate('/dashboard') })
   }, [id, navigate])
+
+  useEffect(() => {
+    if (activeTab === 'expert' && id && !reviewsLoaded) {
+      apiGetProjectReviews(Number(id))
+        .then(r => { setExpertReviews(r); setReviewsLoaded(true) })
+        .catch(() => setReviewsLoaded(true))
+    }
+  }, [activeTab, id, reviewsLoaded])
+
+  async function sendToExpert() {
+    if (!expertEmail.trim() || !id) return
+    setSendingToExpert(true)
+    try {
+      await apiSubmitToExpert(Number(id), expertEmail)
+      toast.success('Проект отправлен эксперту!')
+      setExpertEmail('')
+      setReviewsLoaded(false)
+      const updated = await apiGetProject(Number(id))
+      setProject(updated)
+      setDraft(updated)
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Ошибка отправки')
+    } finally {
+      setSendingToExpert(false)
+    }
+  }
 
   function startEdit() {
     setDraft(project ? { ...project } : null)
@@ -288,6 +324,115 @@ export default function ProjectCard() {
             onChange={expenses => updateField('expenses', expenses)}
             dark={dark}
           />
+        )}
+
+        {activeTab === 'expert' && (
+          <div>
+            {/* Отправить эксперту */}
+            {current.expert_status !== 'reviewed' && (
+              <div
+                className="rounded-2xl border p-5 mb-6"
+                style={{ background: dark ? 'rgba(139,92,246,0.05)' : 'rgba(139,92,246,0.03)', borderColor: dark ? 'rgba(139,92,246,0.15)' : 'rgba(139,92,246,0.12)' }}
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <Icon name="Send" size={15} className="text-violet-400" />
+                  <span className="text-sm font-semibold text-violet-400">Отправить на экспертизу</span>
+                </div>
+                {current.expert_status === 'sent' && (
+                  <div className="flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-amber-400 text-xs mb-3">
+                    <Icon name="Clock" size={13} />
+                    Проект уже отправлен эксперту — ожидайте обратную связь
+                  </div>
+                )}
+                <p className="text-sm mb-3" style={{ color: t.textMuted }}>
+                  Укажите email зарегистрированного эксперта, чтобы отправить ему проект на проверку
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    type="email"
+                    value={expertEmail}
+                    onChange={e => setExpertEmail(e.target.value)}
+                    placeholder="expert@example.com"
+                    className="flex-1 rounded-xl px-3 py-2.5 text-sm outline-none transition-all"
+                    style={{ background: dark ? 'rgba(255,255,255,0.05)' : '#f9fafb', border: `1px solid ${dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'}`, color: t.text }}
+                  />
+                  <button
+                    onClick={sendToExpert}
+                    disabled={sendingToExpert || !expertEmail.trim()}
+                    className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 px-4 py-2.5 text-white text-sm font-semibold transition-all disabled:opacity-50"
+                  >
+                    {sendingToExpert ? <Icon name="Loader2" size={14} className="animate-spin" /> : <Icon name="Send" size={14} />}
+                    Отправить
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Оценки эксперта */}
+            {!reviewsLoaded ? (
+              <div className="text-sm" style={{ color: t.textMuted }}>Загрузка оценок...</div>
+            ) : expertReviews.length === 0 ? (
+              <div
+                className="rounded-2xl border border-dashed p-10 text-center"
+                style={{ borderColor: dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }}
+              >
+                <Icon name="ClipboardList" size={28} className="text-violet-400 mx-auto mb-3" />
+                <p className="text-sm font-medium mb-1" style={{ color: t.text }}>Оценок пока нет</p>
+                <p className="text-xs" style={{ color: t.textMuted }}>Отправьте проект эксперту, чтобы получить обратную связь</p>
+              </div>
+            ) : (
+              expertReviews.map(assignment => (
+                <div key={assignment.assignment_id} className="mb-8">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-600/20 border border-violet-500/20 flex items-center justify-center flex-shrink-0">
+                      <Icon name="UserCheck" size={16} className="text-violet-400" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold" style={{ color: t.text }}>{assignment.expert_name}</div>
+                      {assignment.specialization && <div className="text-xs" style={{ color: t.textMuted }}>{assignment.specialization}</div>}
+                    </div>
+                    <span className={`ml-auto text-xs font-medium px-2.5 py-1 rounded-lg ${
+                      assignment.status === 'reviewed'
+                        ? dark ? 'text-green-400 bg-green-500/10' : 'text-green-700 bg-green-50'
+                        : dark ? 'text-amber-400 bg-amber-500/10' : 'text-amber-600 bg-amber-50'
+                    }`}>
+                      {assignment.status === 'reviewed' ? 'Завершено' : assignment.status === 'in_review' ? 'В работе' : 'Ожидает'}
+                    </span>
+                  </div>
+
+                  {Object.keys(assignment.reviews).length === 0 ? (
+                    <p className="text-sm pl-12" style={{ color: t.textMuted }}>Эксперт ещё не оставил комментариев</p>
+                  ) : (
+                    <div className="space-y-3 pl-0">
+                      {Object.entries(assignment.reviews).map(([section, review]) => (
+                        <div
+                          key={section}
+                          className="rounded-xl border p-4"
+                          style={{ background: dark ? 'rgba(255,255,255,0.03)' : '#ffffff', borderColor: dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.07)' }}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-semibold text-violet-400">{SECTION_LABELS[section] || section}</span>
+                            {review.score != null && (
+                              <span className={`text-xs font-bold px-2 py-0.5 rounded-lg ${
+                                review.score >= 7 ? 'text-green-400 bg-green-500/10'
+                                : review.score >= 4 ? 'text-amber-400 bg-amber-500/10'
+                                : 'text-red-400 bg-red-500/10'
+                              }`}>
+                                {review.score}/10
+                              </span>
+                            )}
+                          </div>
+                          {review.feedback && (
+                            <p className="text-sm leading-relaxed" style={{ color: t.textMuted }}>{review.feedback}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
         )}
       </main>
     </div>

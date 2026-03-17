@@ -6,6 +6,8 @@ const URLS = {
   me: func2url['me'],
   projects: func2url['projects'],
   events: func2url['events'],
+  expertAuth: func2url['expert-auth'],
+  expertReviews: func2url['expert-reviews'],
 }
 
 export function getToken() {
@@ -200,6 +202,7 @@ export interface FullProject {
   tasks: ProjectTask[]
   media: MediaResource[]
   expenses: ExpenseItem[]
+  expert_status?: string | null
 }
 
 export type Project = ProjectListItem
@@ -230,6 +233,142 @@ export async function apiGetEvents(params?: { category?: string; status?: string
   const json = await res.json()
   if (!res.ok) throw new Error(json.error || 'Ошибка загрузки мероприятий')
   return json as GrantEvent[]
+}
+
+// ─── Expert Auth ───────────────────────────────────────────────────────────────
+
+export function getExpertToken() { return localStorage.getItem('gr_expert_token') }
+export function setExpertToken(t: string) { localStorage.setItem('gr_expert_token', t) }
+export function removeExpertToken() { localStorage.removeItem('gr_expert_token') }
+
+function expertHeaders() {
+  const token = getExpertToken()
+  return token ? { 'X-Expert-Token': token } : {}
+}
+
+export async function apiExpertRegister(data: { email: string; password: string; name: string; specialization?: string }) {
+  const res = await fetch(`${URLS.expertAuth}?action=register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка регистрации')
+  return json as { token: string; expert: ExpertUser }
+}
+
+export async function apiExpertLogin(data: { email: string; password: string }) {
+  const res = await fetch(`${URLS.expertAuth}?action=login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка входа')
+  return json as { token: string; expert: ExpertUser }
+}
+
+export async function apiGetExpertMe() {
+  const token = getExpertToken()
+  if (!token) return null
+  const res = await fetch(URLS.expertAuth, { headers: { 'X-Expert-Token': token } })
+  if (!res.ok) return null
+  return res.json() as Promise<ExpertUser>
+}
+
+// ─── Expert Reviews ────────────────────────────────────────────────────────────
+
+export async function apiGetExpertProjects() {
+  const res = await fetch(URLS.expertReviews, { headers: { ...expertHeaders() } })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка загрузки')
+  return json as ExpertAssignment[]
+}
+
+export async function apiGetExpertProject(projectId: number) {
+  const res = await fetch(`${URLS.expertReviews}?project_id=${projectId}`, { headers: { ...expertHeaders() } })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка загрузки')
+  return json as { project: FullProject; reviews: Record<string, ExpertReview>; assignment_id: number; assignment_status: string }
+}
+
+export async function apiSaveExpertReview(data: { assignment_id: number; section: string; feedback: string; score: number | null }) {
+  const res = await fetch(URLS.expertReviews, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...expertHeaders() },
+    body: JSON.stringify(data),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка сохранения')
+  return json
+}
+
+export async function apiCompleteExpertReview(assignment_id: number) {
+  const res = await fetch(`${URLS.expertReviews}?action=complete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...expertHeaders() },
+    body: JSON.stringify({ assignment_id }),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка завершения')
+  return json
+}
+
+export async function apiSubmitToExpert(projectId: number, expertEmail: string) {
+  const res = await fetch(`${URLS.projects}?action=submit_expert&id=${projectId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify({ expert_email: expertEmail }),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка отправки')
+  return json
+}
+
+export async function apiGetProjectReviews(projectId: number) {
+  const res = await fetch(`${URLS.projects}?action=reviews&id=${projectId}`, { headers: { ...authHeaders() } })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка загрузки')
+  return json as ExpertAssignmentWithReviews[]
+}
+
+// ─── Expert Types ──────────────────────────────────────────────────────────────
+
+export interface ExpertUser {
+  id: number
+  email: string
+  name: string
+  specialization: string
+}
+
+export interface ExpertAssignment {
+  assignment_id: number
+  status: string
+  assigned_at: string
+  reviewed_at: string | null
+  project_id: number
+  title: string
+  grant_fund: string
+  deadline: string
+  project_status: string
+  author_name: string
+  organization: string
+}
+
+export interface ExpertReview {
+  feedback: string
+  score: number | null
+  updated_at?: string | null
+}
+
+export interface ExpertAssignmentWithReviews {
+  assignment_id: number
+  status: string
+  assigned_at: string
+  reviewed_at: string | null
+  expert_name: string
+  specialization: string
+  reviews: Record<string, ExpertReview>
 }
 
 export async function apiCreateEvent(data: Partial<GrantEvent>) {
