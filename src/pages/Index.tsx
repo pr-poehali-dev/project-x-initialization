@@ -114,7 +114,7 @@ const Index = () => {
         <h1 className="text-white font-black leading-none mb-4" style={{ fontSize: "clamp(52px, 9vw, 120px)", letterSpacing: "-0.02em" }}>
           Грантовый дайвинг
         </h1>
-        <p className="text-white/70 text-center max-w-xl leading-relaxed" style={{ fontSize: "clamp(14px, 1.2vw, 17px)" }}>
+        <p className="text-white/70 text-center max-w-xl leading-relaxed px-0" style={{ fontSize: "clamp(14px, 1.2vw, 17px)" }}>
           Платформа для НКО и социальных проектов — от первой идеи до победы в гранте.<br />
           Проектная карта, бета-защита с ИИ и экспертное ревью в одном месте.
         </p>
