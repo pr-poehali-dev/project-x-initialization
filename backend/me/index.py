@@ -28,7 +28,7 @@ def handler(event: dict, context) -> dict:
     conn = get_conn()
     cur = conn.cursor()
     cur.execute(
-        "SELECT u.id, u.email, u.name, u.organization, u.created_at FROM users u JOIN sessions s ON s.user_id = u.id WHERE s.token = %s AND s.expires_at > NOW()",
+        "SELECT u.id, u.email, u.name, u.organization, u.created_at, u.is_admin FROM users u JOIN sessions s ON s.user_id = u.id WHERE s.token = %s AND s.expires_at > NOW()",
         (token,)
     )
     row = cur.fetchone()
@@ -36,7 +36,7 @@ def handler(event: dict, context) -> dict:
         conn.close()
         return {'statusCode': 401, 'headers': CORS, 'body': json.dumps({'error': 'Сессия истекла'})}
 
-    user_id, email, name, organization, created_at = row
+    user_id, email, name, organization, created_at, is_admin = row
 
     method = event.get('httpMethod', 'GET')
 
@@ -61,6 +61,7 @@ def handler(event: dict, context) -> dict:
             'email': email,
             'name': name,
             'organization': organization or '',
-            'created_at': created_at.isoformat()
+            'created_at': created_at.isoformat(),
+            'is_admin': bool(is_admin),
         })
     }

@@ -11,6 +11,7 @@ interface User {
   name: string
   organization: string
   created_at: string
+  is_admin?: boolean
 }
 
 const STATUS_LABEL: Record<string, { label: string; darkColor: string; lightColor: string }> = {
@@ -101,14 +102,16 @@ export default function Dashboard() {
               <Icon name="CalendarDays" size={15} />
               <span className="hidden sm:inline">Мероприятия</span>
             </button>
-            <button
-              onClick={() => navigate('/admin/events')}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-all duration-200"
-              style={{ color: t.textMuted }}
-            >
-              <Icon name="Settings2" size={15} />
-              <span className="hidden sm:inline">Управление</span>
-            </button>
+            {user?.is_admin && (
+              <button
+                onClick={() => navigate('/admin/events')}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-all duration-200"
+                style={{ color: t.textMuted }}
+              >
+                <Icon name="Settings2" size={15} />
+                <span className="hidden sm:inline">Управление</span>
+              </button>
+            )}
             {/* Theme toggle */}
             <button
               onClick={toggle}

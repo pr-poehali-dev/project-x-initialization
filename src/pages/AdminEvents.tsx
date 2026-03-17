@@ -47,6 +47,7 @@ export default function AdminEvents() {
   useEffect(() => {
     apiGetMe().then(u => {
       if (!u) { navigate('/'); return }
+      if (!u.is_admin) { navigate('/dashboard'); return }
       loadEvents()
     })
   }, [navigate])

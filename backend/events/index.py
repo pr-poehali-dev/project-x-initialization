@@ -81,13 +81,16 @@ def handler(event: dict, context) -> dict:
             return {'statusCode': 401, 'headers': CORS, 'body': json.dumps({'error': 'Не авторизован'})}
 
         cur.execute(
-            "SELECT u.id FROM users u JOIN sessions s ON s.user_id = u.id WHERE s.token = %s AND s.expires_at > NOW()",
+            "SELECT u.id, u.is_admin FROM users u JOIN sessions s ON s.user_id = u.id WHERE s.token = %s AND s.expires_at > NOW()",
             (token,)
         )
         row = cur.fetchone()
         if not row:
             conn.close()
             return {'statusCode': 401, 'headers': CORS, 'body': json.dumps({'error': 'Сессия истекла'})}
+        if not row[1]:
+            conn.close()
+            return {'statusCode': 403, 'headers': CORS, 'body': json.dumps({'error': 'Нет прав доступа'})}
 
         body = json.loads(event.get('body') or '{}')
         title = (body.get('title') or '').strip()
@@ -130,12 +133,16 @@ def handler(event: dict, context) -> dict:
             conn.close()
             return {'statusCode': 401, 'headers': CORS, 'body': json.dumps({'error': 'Не авторизован'})}
         cur.execute(
-            "SELECT u.id FROM users u JOIN sessions s ON s.user_id = u.id WHERE s.token = %s AND s.expires_at > NOW()",
+            "SELECT u.id, u.is_admin FROM users u JOIN sessions s ON s.user_id = u.id WHERE s.token = %s AND s.expires_at > NOW()",
             (token,)
         )
-        if not cur.fetchone():
+        admin_row = cur.fetchone()
+        if not admin_row:
             conn.close()
             return {'statusCode': 401, 'headers': CORS, 'body': json.dumps({'error': 'Сессия истекла'})}
+        if not admin_row[1]:
+            conn.close()
+            return {'statusCode': 403, 'headers': CORS, 'body': json.dumps({'error': 'Нет прав доступа'})}
 
         event_id = params.get('id')
         if not event_id:
