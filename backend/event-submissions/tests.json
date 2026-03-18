@@ -1,0 +1,12 @@
+{
+  "tests": [
+    {
+      "name": "GET projects list without token - unauthorized",
+      "method": "GET",
+      "path": "/?event_id=1",
+      "expectedStatus": 401,
+      "expectedBody": {"error": "Не авторизован"},
+      "bodyMatcher": "partial"
+    }
+  ]
+}

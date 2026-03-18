@@ -1,9 +1,9 @@
 """
 Грантовые мероприятия - публичный каталог.
 GET / - список всех мероприятий (фильтры: ?category=, ?status=open)
-POST / - создать мероприятие (авторизованные пользователи)
-PUT /?id=N - обновить мероприятие
-DELETE /?id=N - удалить мероприятие
+POST / - создать мероприятие (только администраторы)
+PUT /?id=N - обновить мероприятие (только администраторы)
+DELETE /?id=N - удалить мероприятие (только администраторы)
 """
 import json
 import os
@@ -58,14 +58,16 @@ def handler(event: dict, context) -> dict:
 
         cur.execute(
             f"""SELECT id, title, organizer, description, deadline, start_date, end_date,
-                       grant_amount, category, geography, target_audience, application_url, status, created_at
+                       grant_amount, category, geography, target_audience, application_url, status,
+                       created_at, is_our_event
                FROM grant_events
                {where_sql}
                ORDER BY deadline ASC NULLS LAST, created_at DESC""",
             values
         )
         cols = ['id', 'title', 'organizer', 'description', 'deadline', 'start_date', 'end_date',
-                'grant_amount', 'category', 'geography', 'target_audience', 'application_url', 'status', 'created_at']
+                'grant_amount', 'category', 'geography', 'target_audience', 'application_url', 'status',
+                'created_at', 'is_our_event']
         rows = [dict(zip(cols, row)) for row in cur.fetchall()]
         conn.close()
         return {
@@ -100,8 +102,8 @@ def handler(event: dict, context) -> dict:
 
         cur.execute(
             """INSERT INTO grant_events (title, organizer, description, deadline, start_date, end_date,
-                grant_amount, category, geography, target_audience, application_url, status)
-               VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                grant_amount, category, geography, target_audience, application_url, status, is_our_event)
+               VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                RETURNING id""",
             (
                 title,
@@ -116,6 +118,7 @@ def handler(event: dict, context) -> dict:
                 body.get('target_audience') or '',
                 body.get('application_url') or '',
                 body.get('status') or 'open',
+                bool(body.get('is_our_event', False)),
             )
         )
         new_id = cur.fetchone()[0]
@@ -158,7 +161,7 @@ def handler(event: dict, context) -> dict:
         cur.execute(
             """UPDATE grant_events SET title=%s, organizer=%s, description=%s, deadline=%s,
                start_date=%s, end_date=%s, grant_amount=%s, category=%s, geography=%s,
-               target_audience=%s, application_url=%s, status=%s, updated_at=NOW()
+               target_audience=%s, application_url=%s, status=%s, is_our_event=%s, updated_at=NOW()
                WHERE id=%s""",
             (
                 title,
@@ -173,6 +176,7 @@ def handler(event: dict, context) -> dict:
                 body.get('target_audience') or '',
                 body.get('application_url') or '',
                 body.get('status') or 'open',
+                bool(body.get('is_our_event', False)),
                 event_id,
             )
         )

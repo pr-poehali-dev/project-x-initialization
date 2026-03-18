@@ -326,8 +326,16 @@ export default function ProjectCard() {
 
         {activeTab === 'expert' && (
           <div>
+            {/* Если проект подан на мероприятие — сообщение */}
+            {current.status === 'submitted' && (
+              <div className="flex items-center gap-2 rounded-xl border border-indigo-500/20 bg-indigo-500/5 px-4 py-3 text-indigo-400 text-sm mb-6">
+                <Icon name="Send" size={14} />
+                Проект подан на мероприятие. Экспертиза будет запущена организатором.
+              </div>
+            )}
+
             {/* Статус экспертизы */}
-            {current.expert_status === 'reviewed' ? (
+            {current.status !== 'submitted' && current.expert_status === 'reviewed' ? (
               <div className="mb-6 space-y-3">
                 <div className="flex items-center gap-2 rounded-xl border border-green-500/20 bg-green-500/5 px-4 py-3 text-green-400 text-sm">
                   <Icon name="CheckCircle" size={14} />
@@ -350,12 +358,12 @@ export default function ProjectCard() {
                   </button>
                 </div>
               </div>
-            ) : current.expert_status === 'sent' ? (
+            ) : current.status !== 'submitted' && current.expert_status === 'sent' ? (
               <div className="flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-amber-400 text-sm mb-6">
                 <Icon name="Clock" size={14} />
                 Проект на проверке у эксперта — ожидайте обратную связь
               </div>
-            ) : (
+            ) : current.status !== 'submitted' ? (
               <div
                 className="rounded-2xl border p-5 mb-6"
                 style={{ background: dark ? 'rgba(139,92,246,0.05)' : 'rgba(139,92,246,0.03)', borderColor: dark ? 'rgba(139,92,246,0.15)' : 'rgba(139,92,246,0.12)' }}
@@ -376,7 +384,7 @@ export default function ProjectCard() {
                   {sendingToExpert ? 'Отправляем...' : 'Отправить на экспертизу'}
                 </button>
               </div>
-            )}
+            ) : null}
 
             {/* Оценки эксперта */}
             {!reviewsLoaded ? (

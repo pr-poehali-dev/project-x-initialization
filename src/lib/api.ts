@@ -8,6 +8,7 @@ const URLS = {
   events: func2url['events'],
   expertAuth: func2url['expert-auth'],
   expertReviews: func2url['expert-reviews'],
+  eventSubmissions: func2url['event-submissions'],
 }
 
 export function getToken() {
@@ -265,6 +266,35 @@ export interface GrantEvent {
   application_url: string
   status: string
   created_at: string
+  is_our_event: boolean
+}
+
+export interface EventSubmission {
+  id: number
+  submitted_at: string
+  expert_launched: boolean
+  project_id: number
+  title: string
+  short_description: string
+  goal: string
+  budget: string
+  scale: string
+  geography: string
+  status: string
+  expert_status: string | null
+  user_id: number
+  user_name: string
+  user_email: string
+  organization: string
+}
+
+export interface MyProjectForSubmission {
+  id: number
+  title: string
+  is_complete: boolean
+  status: string
+  expert_status: string | null
+  submitted_to_events: number[]
 }
 
 export async function apiGetEvents(params?: { category?: string; status?: string }) {
@@ -444,4 +474,55 @@ export async function apiDeleteEvent(id: number) {
   const json = await res.json()
   if (!res.ok) throw new Error(json.error || 'Ошибка удаления')
   return json
+}
+
+// ─── Event Submissions ─────────────────────────────────────────────────────────
+
+export async function apiGetMyProjectsForSubmission() {
+  const res = await fetch(`${URLS.eventSubmissions}?action=my_projects`, {
+    headers: { ...authHeaders() },
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка загрузки проектов')
+  return json as MyProjectForSubmission[]
+}
+
+export async function apiCheckMySubmission(eventId: number) {
+  const res = await fetch(`${URLS.eventSubmissions}?my=1&event_id=${eventId}`, {
+    headers: { ...authHeaders() },
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка проверки')
+  return json as { submitted: boolean; submission_id?: number; project_id?: number; project_title?: string }
+}
+
+export async function apiSubmitProjectToEvent(eventId: number, projectId: number) {
+  const res = await fetch(URLS.eventSubmissions, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify({ event_id: eventId, project_id: projectId }),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка подачи проекта')
+  return json
+}
+
+export async function apiGetEventSubmissions(eventId: number) {
+  const res = await fetch(`${URLS.eventSubmissions}?event_id=${eventId}`, {
+    headers: { ...authHeaders() },
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка загрузки заявок')
+  return json as EventSubmission[]
+}
+
+export async function apiLaunchExpertise(eventId: number) {
+  const res = await fetch(`${URLS.eventSubmissions}?action=launch_expert&event_id=${eventId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify({}),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка запуска экспертизы')
+  return json as { ok: boolean; assigned: number }
 }
