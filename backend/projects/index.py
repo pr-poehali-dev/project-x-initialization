@@ -385,7 +385,6 @@ def handler(event: dict, context) -> dict:
         cur.execute("DELETE FROM project_expenses WHERE project_id=%s", (project_id,))
         cur.execute("DELETE FROM project_team_members WHERE project_id=%s", (project_id,))
         cur.execute("DELETE FROM project_media WHERE project_id=%s", (project_id,))
-        cur.execute("DELETE FROM project_events WHERE project_id=%s", (project_id,))
         cur.execute("DELETE FROM projects WHERE id=%s AND user_id=%s", (project_id, user_id))
         if cur.rowcount == 0:
             conn.rollback()
