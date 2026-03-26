@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { apiGetMe, apiUpdateMe } from '@/lib/api'
-import type { UserProfile } from '@/lib/api'
+import { apiGetMe, apiUpdateMe, apiGetAvailableCoordinators, apiSetCoordinator } from '@/lib/api'
+import type { UserProfile, CoordinatorProfile } from '@/lib/api'
 import Icon from '@/components/ui/icon'
 import { useTheme } from '@/hooks/useTheme'
 import { toast } from 'sonner'
@@ -43,6 +43,10 @@ export default function EditProfile() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [coordinators, setCoordinators] = useState<CoordinatorProfile[]>([])
+  const [currentCoordinatorId, setCurrentCoordinatorId] = useState<number | null>(null)
+  const [selectedCoordinatorId, setSelectedCoordinatorId] = useState<number | null>(null)
+  const [savingCoord, setSavingCoord] = useState(false)
   const navigate = useNavigate()
   const { theme, toggle } = useTheme()
   const dark = theme === 'dark'
@@ -64,7 +68,7 @@ export default function EditProfile() {
   }
 
   useEffect(() => {
-    apiGetMe().then(u => {
+    Promise.all([apiGetMe(), apiGetAvailableCoordinators().catch(() => [])]).then(([u, coords]) => {
       if (!u) { navigate('/'); return }
       setEmail(u.email || '')
       setProfile({
@@ -78,9 +82,28 @@ export default function EditProfile() {
         phone: u.phone || '',
         pd_consent: u.pd_consent || false,
       })
+      setCoordinators(coords as CoordinatorProfile[])
+      if (u.coordinator_id) {
+        setCurrentCoordinatorId(u.coordinator_id)
+        setSelectedCoordinatorId(u.coordinator_id)
+      }
       setLoading(false)
     })
   }, [navigate])
+
+  async function handleSaveCoordinator() {
+    if (!selectedCoordinatorId) return
+    setSavingCoord(true)
+    try {
+      await apiSetCoordinator(selectedCoordinatorId)
+      setCurrentCoordinatorId(selectedCoordinatorId)
+      toast.success('Координатор сохранён')
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Ошибка')
+    } finally {
+      setSavingCoord(false)
+    }
+  }
 
   function set(key: keyof UserProfile, value: string | boolean) {
     setProfile(p => ({ ...p, [key]: value }))
@@ -180,6 +203,55 @@ export default function EditProfile() {
           <Field label="Организация / место работы" value={profile.organization || ''} onChange={v => set('organization', v)} placeholder="НКО, фонд, учреждение..." inputCls={inputCls} inputStyle={inputStyle} labelColor={t.textMuted} />
           <Field label="Место работы (подробно)" value={profile.workplace || ''} onChange={v => set('workplace', v)} placeholder="ООО Пример, Москва" inputCls={inputCls} inputStyle={inputStyle} labelColor={t.textMuted} />
           <Field label="Должность" value={profile.position || ''} onChange={v => set('position', v)} placeholder="Руководитель проектов" inputCls={inputCls} inputStyle={inputStyle} labelColor={t.textMuted} />
+        </div>
+
+        {/* Мой координатор */}
+        <div className="rounded-2xl border p-5 mb-4 space-y-4 transition-colors duration-300"
+          style={{ background: t.cardBg, borderColor: t.cardBorder }}>
+          <div>
+            <h2 className="text-sm font-semibold" style={{ color: t.text }}>Мой координатор</h2>
+            <p className="text-xs mt-0.5" style={{ color: t.textMuted }}>
+              Координатор видит ваши проекты в банке и может помочь с оформлением заявок
+            </p>
+          </div>
+          {coordinators.length === 0 ? (
+            <p className="text-sm" style={{ color: t.textMuted }}>Координаторы на платформе пока не назначены</p>
+          ) : (
+            <>
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: t.textMuted }}>Выберите координатора</label>
+                <select
+                  value={selectedCoordinatorId || ''}
+                  onChange={e => setSelectedCoordinatorId(Number(e.target.value) || null)}
+                  className={inputCls}
+                  style={inputStyle}
+                >
+                  <option value="">Не выбран</option>
+                  {coordinators.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.name || c.full_name} · {c.level_label}{c.location ? ` · ${c.location}` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {selectedCoordinatorId !== currentCoordinatorId && (
+                <button
+                  onClick={handleSaveCoordinator}
+                  disabled={savingCoord}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all disabled:opacity-50"
+                  style={{ background: 'rgba(99,102,241,0.1)', color: '#818cf8' }}
+                >
+                  {savingCoord ? <Icon name="Loader2" size={13} className="animate-spin" /> : <Icon name="UserCheck" size={13} />}
+                  {savingCoord ? 'Сохранение...' : 'Прикрепиться к координатору'}
+                </button>
+              )}
+              {currentCoordinatorId && (
+                <p className="text-xs" style={{ color: t.textMuted }}>
+                  ✓ Вы прикреплены к координатору
+                </p>
+              )}
+            </>
+          )}
         </div>
 
         {/* Согласие на обработку ПД */}

@@ -32,7 +32,7 @@ def handler(event: dict, context) -> dict:
     cur.execute(
         """SELECT u.id, u.email, u.name, u.organization, u.created_at, u.is_admin,
                   u.full_name, u.education, u.workplace, u.position, u.city, u.phone,
-                  u.pd_consent, u.pd_consent_at
+                  u.pd_consent, u.pd_consent_at, u.coordinator_id
            FROM users u JOIN sessions s ON s.user_id = u.id
            WHERE s.token = %s AND s.expires_at > NOW()""",
         (token,)
@@ -44,7 +44,7 @@ def handler(event: dict, context) -> dict:
 
     (user_id, email, name, organization, created_at, is_admin,
      full_name, education, workplace, position, city, phone,
-     pd_consent, pd_consent_at) = row
+     pd_consent, pd_consent_at, coordinator_id) = row
 
     method = event.get('httpMethod', 'GET')
 
@@ -104,6 +104,7 @@ def handler(event: dict, context) -> dict:
             'phone': phone or '',
             'pd_consent': bool(pd_consent),
             'is_admin': bool(is_admin),
+            'coordinator_id': coordinator_id,
             'created_at': created_at.isoformat() if created_at else '',
         })
     }

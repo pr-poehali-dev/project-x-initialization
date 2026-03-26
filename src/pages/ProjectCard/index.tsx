@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import Icon from '@/components/ui/icon'
-import { apiGetProject, apiUpdateProject, apiSubmitToExpert, apiGetProjectReviews } from '@/lib/api'
+import { apiGetProject, apiUpdateProject, apiSubmitToExpert, apiGetProjectReviews, apiAddProjectToBank, apiGetMe } from '@/lib/api'
 import type { FullProject, ExpertAssignmentWithReviews } from '@/lib/api'
 import { emptyProject } from './types'
 import { useTheme } from '@/hooks/useTheme'
@@ -58,6 +58,8 @@ export default function ProjectCard() {
   const [sendingToExpert, setSendingToExpert] = useState(false)
   const [expertReviews, setExpertReviews] = useState<ExpertAssignmentWithReviews[]>([])
   const [reviewsLoaded, setReviewsLoaded] = useState(false)
+  const [addingToBank, setAddingToBank] = useState(false)
+  const [hasCoordinator, setHasCoordinator] = useState(false)
 
   const t = {
     bg:         dark ? '#0a0f1e'                   : '#f5f7fa',
@@ -79,9 +81,15 @@ export default function ProjectCard() {
 
   useEffect(() => {
     if (!id) return
-    apiGetProject(Number(id))
-      .then(p => { setProject(p); setDraft(p); setLoading(false) })
-      .catch(() => { navigate('/dashboard') })
+    Promise.all([
+      apiGetProject(Number(id)),
+      apiGetMe().catch(() => null),
+    ]).then(([p, me]) => {
+      setProject(p)
+      setDraft(p)
+      setHasCoordinator(!!(me && me.coordinator_id))
+      setLoading(false)
+    }).catch(() => navigate('/dashboard'))
   }, [id, navigate])
 
   useEffect(() => {
@@ -106,6 +114,22 @@ export default function ProjectCard() {
       toast.error(e instanceof Error ? e.message : 'Ошибка отправки')
     } finally {
       setSendingToExpert(false)
+    }
+  }
+
+  async function addToBank() {
+    if (!id) return
+    setAddingToBank(true)
+    try {
+      await apiAddProjectToBank(Number(id))
+      toast.success('Проект добавлен в банк проектов!')
+      const updated = await apiGetProject(Number(id))
+      setProject(updated)
+      setDraft(updated)
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Ошибка')
+    } finally {
+      setAddingToBank(false)
     }
   }
 
@@ -348,14 +372,27 @@ export default function ProjectCard() {
                   <p className="text-sm mb-3" style={{ color: t.textMuted }}>
                     Хотите получить мнение ещё одного эксперта? Запросите повторную экспертизу.
                   </p>
-                  <button
-                    onClick={sendToExpert}
-                    disabled={sendingToExpert}
-                    className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 px-4 py-2 text-white text-sm font-semibold transition-all disabled:opacity-50"
-                  >
-                    {sendingToExpert ? <Icon name="Loader2" size={14} className="animate-spin" /> : <Icon name="RefreshCw" size={14} />}
-                    Запросить повторную экспертизу
-                  </button>
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      onClick={sendToExpert}
+                      disabled={sendingToExpert}
+                      className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 px-4 py-2 text-white text-sm font-semibold transition-all disabled:opacity-50"
+                    >
+                      {sendingToExpert ? <Icon name="Loader2" size={14} className="animate-spin" /> : <Icon name="RefreshCw" size={14} />}
+                      Запросить повторную экспертизу
+                    </button>
+                    {hasCoordinator && current.expert_status !== 'in_bank' && (
+                      <button
+                        onClick={addToBank}
+                        disabled={addingToBank}
+                        className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all disabled:opacity-50 hover:opacity-80"
+                        style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.25)' }}
+                      >
+                        {addingToBank ? <Icon name="Loader2" size={14} className="animate-spin" /> : <Icon name="Archive" size={14} />}
+                        {addingToBank ? 'Добавляем...' : 'Добавить в банк'}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ) : current.status !== 'submitted' && current.expert_status === 'sent' ? (
@@ -375,14 +412,33 @@ export default function ProjectCard() {
                 <p className="text-sm mb-4" style={{ color: t.textMuted }}>
                   Отправьте проект на проверку — система автоматически назначит свободного эксперта, который оценит каждый раздел и оставит комментарии.
                 </p>
-                <button
-                  onClick={sendToExpert}
-                  disabled={sendingToExpert}
-                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 px-5 py-2.5 text-white text-sm font-semibold transition-all disabled:opacity-50"
-                >
-                  {sendingToExpert ? <Icon name="Loader2" size={14} className="animate-spin" /> : <Icon name="Send" size={14} />}
-                  {sendingToExpert ? 'Отправляем...' : 'Отправить на экспертизу'}
-                </button>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={sendToExpert}
+                    disabled={sendingToExpert}
+                    className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 px-5 py-2.5 text-white text-sm font-semibold transition-all disabled:opacity-50"
+                  >
+                    {sendingToExpert ? <Icon name="Loader2" size={14} className="animate-spin" /> : <Icon name="Send" size={14} />}
+                    {sendingToExpert ? 'Отправляем...' : 'Отправить на экспертизу'}
+                  </button>
+                  {hasCoordinator && current.expert_status !== 'in_bank' && (
+                    <button
+                      onClick={addToBank}
+                      disabled={addingToBank}
+                      className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all disabled:opacity-50 hover:opacity-80"
+                      style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.25)' }}
+                    >
+                      {addingToBank ? <Icon name="Loader2" size={14} className="animate-spin" /> : <Icon name="Archive" size={14} />}
+                      {addingToBank ? 'Добавляем...' : 'Добавить в банк'}
+                    </button>
+                  )}
+                  {current.expert_status === 'in_bank' && (
+                    <span className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-indigo-400 bg-indigo-500/10">
+                      <Icon name="CheckCircle" size={14} />
+                      В банке проектов
+                    </span>
+                  )}
+                </div>
               </div>
             ) : null}
 

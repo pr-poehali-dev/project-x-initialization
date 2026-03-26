@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { apiGetExpertMe, apiGetExpertProjects, removeExpertToken } from '@/lib/api'
+import { apiGetExpertMe, apiGetExpertProjects, apiGetCoordinatorMe, removeExpertToken } from '@/lib/api'
 import type { ExpertUser, ExpertAssignment } from '@/lib/api'
 import Icon from '@/components/ui/icon'
 import { useTheme } from '@/hooks/useTheme'
@@ -14,6 +14,7 @@ const ASSIGN_STATUS: Record<string, { label: string; darkColor: string; lightCol
 export default function ExpertDashboard() {
   const [expert, setExpert] = useState<ExpertUser | null>(null)
   const [assignments, setAssignments] = useState<ExpertAssignment[]>([])
+  const [isCoordinator, setIsCoordinator] = useState(false)
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
   const { theme, toggle } = useTheme()
@@ -36,10 +37,15 @@ export default function ExpertDashboard() {
   }
 
   useEffect(() => {
-    Promise.all([apiGetExpertMe(), apiGetExpertProjects().catch(() => [])]).then(([ex, assign]) => {
+    Promise.all([
+      apiGetExpertMe(),
+      apiGetExpertProjects().catch(() => []),
+      apiGetCoordinatorMe().catch(() => null),
+    ]).then(([ex, assign, coord]) => {
       if (!ex) { navigate('/expert'); return }
       setExpert(ex)
       setAssignments(assign as ExpertAssignment[])
+      setIsCoordinator(!!coord)
       setLoading(false)
     })
   }, [navigate])
@@ -81,6 +87,16 @@ export default function ExpertDashboard() {
             </span>
           </div>
           <div className="flex items-center gap-2">
+            {isCoordinator && (
+              <button
+                onClick={() => navigate('/coordinator/dashboard')}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
+                style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8' }}
+              >
+                <Icon name="Compass" size={15} />
+                <span className="hidden sm:inline">Кабинет координатора</span>
+              </button>
+            )}
             <button
               onClick={toggle}
               className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all hover:scale-105"

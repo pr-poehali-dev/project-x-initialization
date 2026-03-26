@@ -4,10 +4,38 @@ import { toast } from 'sonner'
 import {
   apiGetMe, apiGetEvents, apiCreateEvent, apiUpdateEvent, apiDeleteEvent,
   apiGetEventSubmissions, apiLaunchExpertise,
+  apiGetExpertsForAdmin, apiAssignCoordinator,
 } from '@/lib/api'
-import type { GrantEvent, EventSubmission } from '@/lib/api'
+import type { GrantEvent, EventSubmission, ExpertForAdmin } from '@/lib/api'
 import Icon from '@/components/ui/icon'
 import { useTheme } from '@/hooks/useTheme'
+
+const LEVELS = [
+  { value: 'local', label: 'Локальный' },
+  { value: 'municipal', label: 'Муниципальный' },
+  { value: 'regional', label: 'Региональный' },
+  { value: 'district', label: 'Окружной' },
+]
+
+const CITIES = [
+  'Москва', 'Санкт-Петербург', 'Новосибирск', 'Екатеринбург', 'Казань',
+  'Нижний Новгород', 'Челябинск', 'Самара', 'Уфа', 'Ростов-на-Дону',
+  'Краснодар', 'Воронеж', 'Пермь', 'Волгоград', 'Красноярск',
+]
+
+const REGIONS = [
+  'Московская область', 'Ленинградская область', 'Краснодарский край',
+  'Свердловская область', 'Татарстан', 'Башкортостан', 'Ростовская область',
+  'Нижегородская область', 'Челябинская область', 'Самарская область',
+  'Красноярский край', 'Пермский край', 'Новосибирская область', 'Воронежская область',
+]
+
+const DISTRICTS = [
+  'Центральный федеральный округ', 'Северо-Западный федеральный округ',
+  'Южный федеральный округ', 'Северо-Кавказский федеральный округ',
+  'Приволжский федеральный округ', 'Уральский федеральный округ',
+  'Сибирский федеральный округ', 'Дальневосточный федеральный округ',
+]
 
 const CATEGORIES = ['Молодёжь', 'Культура', 'Наука', 'Образование', 'Спорт', 'Социальный', 'Экология', 'Другое']
 const STATUSES = [
@@ -23,7 +51,7 @@ const EMPTY: Partial<GrantEvent> = {
   is_our_event: false,
 }
 
-type AdminTab = 'events' | 'submissions'
+type AdminTab = 'events' | 'submissions' | 'experts'
 
 export default function AdminEvents() {
   const [adminTab, setAdminTab] = useState<AdminTab>('events')
@@ -38,6 +66,14 @@ export default function AdminEvents() {
   const [submissions, setSubmissions] = useState<EventSubmission[]>([])
   const [submissionsLoading, setSubmissionsLoading] = useState(false)
   const [launchingExpert, setLaunchingExpert] = useState(false)
+
+  // Experts tab
+  const [experts, setExperts] = useState<ExpertForAdmin[]>([])
+  const [expertsLoading, setExpertsLoading] = useState(false)
+  const [assignTarget, setAssignTarget] = useState<ExpertForAdmin | null>(null)
+  const [assignLevel, setAssignLevel] = useState('municipal')
+  const [assignLocation, setAssignLocation] = useState('')
+  const [assigning, setAssigning] = useState(false)
 
   const navigate = useNavigate()
   const { theme, toggle } = useTheme()
@@ -82,7 +118,34 @@ export default function AdminEvents() {
     if (adminTab === 'submissions' && selectedEventId) {
       loadSubmissions(selectedEventId)
     }
+    if (adminTab === 'experts' && experts.length === 0) {
+      loadExperts()
+    }
   }, [adminTab, selectedEventId])
+
+  function loadExperts() {
+    setExpertsLoading(true)
+    apiGetExpertsForAdmin()
+      .then(e => { setExperts(e); setExpertsLoading(false) })
+      .catch(() => setExpertsLoading(false))
+  }
+
+  async function handleAssign() {
+    if (!assignTarget) return
+    if (!assignLevel) { toast.error('Выберите уровень'); return }
+    if (assignLevel !== 'local' && !assignLocation) { toast.error('Укажите локацию'); return }
+    setAssigning(true)
+    try {
+      await apiAssignCoordinator({ expert_id: assignTarget.id, level: assignLevel, location: assignLocation })
+      toast.success(`${assignTarget.name} назначен координатором`)
+      setAssignTarget(null)
+      loadExperts()
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Ошибка')
+    } finally {
+      setAssigning(false)
+    }
+  }
 
   function loadSubmissions(eventId: number) {
     setSubmissionsLoading(true)
@@ -222,6 +285,7 @@ export default function AdminEvents() {
           {[
             { id: 'events' as AdminTab, label: 'Мероприятия', icon: 'Calendar' },
             { id: 'submissions' as AdminTab, label: 'Поданные проекты', icon: 'FolderOpen', badge: ourEvents.length },
+            { id: 'experts' as AdminTab, label: 'Эксперты', icon: 'Users' },
           ].map(tab => (
             <button key={tab.id} onClick={() => setAdminTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all -mb-px ${
@@ -385,6 +449,133 @@ export default function AdminEvents() {
                     </div>
                   )
                 })}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── Вкладка: Эксперты ── */}
+        {adminTab === 'experts' && (
+          <>
+            {expertsLoading ? (
+              <div className="text-center py-10 text-sm" style={{ color: t.textMuted }}>Загрузка...</div>
+            ) : experts.length === 0 ? (
+              <div className="rounded-2xl border border-dashed p-14 text-center"
+                style={{ borderColor: dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }}>
+                <Icon name="UserCheck" size={32} className="text-blue-400 mx-auto mb-3" />
+                <p className="font-medium mb-1" style={{ color: t.text }}>Экспертов нет</p>
+                <p className="text-sm" style={{ color: t.textMuted }}>Дождитесь регистрации экспертов на платформе</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-sm mb-4" style={{ color: t.textMuted }}>{experts.length} экспертов</p>
+                {experts.map(ex => (
+                  <div key={ex.id} className="flex items-center gap-4 rounded-xl border p-4"
+                    style={{ background: t.cardBg, borderColor: t.cardBorder }}>
+                    <div className="w-9 h-9 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                      <span className="text-sm font-semibold text-blue-400">
+                        {(ex.full_name || ex.name || 'E').charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-medium" style={{ color: t.text }}>{ex.full_name || ex.name}</span>
+                        {ex.coordinator_id && (
+                          <span className="text-xs px-2 py-0.5 rounded-lg text-green-400 bg-green-500/10">
+                            Координатор · {ex.coordinator_level === 'municipal' ? 'муниципальный' :
+                              ex.coordinator_level === 'regional' ? 'региональный' :
+                              ex.coordinator_level === 'district' ? 'окружной' : 'локальный'}
+                            {ex.coordinator_location && ` · ${ex.coordinator_location}`}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs mt-0.5" style={{ color: t.textMuted }}>
+                        {ex.email}{ex.specialization && ` · ${ex.specialization}`}{ex.city && ` · ${ex.city}`}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => { setAssignTarget(ex); setAssignLevel('municipal'); setAssignLocation('') }}
+                      className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium transition-all hover:opacity-80"
+                      style={{ background: 'rgba(99,102,241,0.1)', color: '#818cf8' }}>
+                      <Icon name="UserCog" size={13} />
+                      {ex.coordinator_id ? 'Изменить' : 'Назначить координатором'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Modal: Назначение координатора */}
+            {assignTarget && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
+                <div className="w-full max-w-md rounded-2xl p-6 shadow-2xl"
+                  style={{ background: dark ? '#131929' : '#ffffff', border: `1px solid ${t.cardBorder}` }}>
+                  <div className="flex items-center justify-between mb-5">
+                    <h3 className="font-semibold" style={{ color: t.text }}>Назначение координатора</h3>
+                    <button onClick={() => setAssignTarget(null)} style={{ color: t.textMuted }}>
+                      <Icon name="X" size={18} />
+                    </button>
+                  </div>
+                  <div className="mb-4 p-3 rounded-xl" style={{ background: t.toggleBg }}>
+                    <p className="text-sm font-medium" style={{ color: t.text }}>{assignTarget.full_name || assignTarget.name}</p>
+                    <p className="text-xs mt-0.5" style={{ color: t.textMuted }}>{assignTarget.email}</p>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-medium mb-1.5" style={{ color: t.textMuted }}>Уровень координатора *</label>
+                      <select value={assignLevel} onChange={e => { setAssignLevel(e.target.value); setAssignLocation('') }}
+                        className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
+                        style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.text }}>
+                        {LEVELS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
+                      </select>
+                    </div>
+                    {assignLevel === 'municipal' && (
+                      <div>
+                        <label className="block text-xs font-medium mb-1.5" style={{ color: t.textMuted }}>Город *</label>
+                        <select value={assignLocation} onChange={e => setAssignLocation(e.target.value)}
+                          className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
+                          style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.text }}>
+                          <option value="">Выберите город</option>
+                          {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                      </div>
+                    )}
+                    {assignLevel === 'regional' && (
+                      <div>
+                        <label className="block text-xs font-medium mb-1.5" style={{ color: t.textMuted }}>Регион *</label>
+                        <select value={assignLocation} onChange={e => setAssignLocation(e.target.value)}
+                          className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
+                          style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.text }}>
+                          <option value="">Выберите регион</option>
+                          {REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
+                        </select>
+                      </div>
+                    )}
+                    {assignLevel === 'district' && (
+                      <div>
+                        <label className="block text-xs font-medium mb-1.5" style={{ color: t.textMuted }}>Округ *</label>
+                        <select value={assignLocation} onChange={e => setAssignLocation(e.target.value)}
+                          className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
+                          style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.text }}>
+                          <option value="">Выберите округ</option>
+                          {DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-3 mt-6">
+                    <button onClick={handleAssign} disabled={assigning}
+                      className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 py-2.5 text-white text-sm font-semibold transition-all disabled:opacity-50">
+                      {assigning ? <Icon name="Loader2" size={14} className="animate-spin" /> : <Icon name="UserCheck" size={14} />}
+                      {assigning ? 'Сохранение...' : 'Сохранить'}
+                    </button>
+                    <button onClick={() => setAssignTarget(null)} className="px-5 py-2.5 rounded-xl text-sm transition-all hover:opacity-70"
+                      style={{ background: t.toggleBg, color: t.textMuted }}>
+                      Отмена
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </>

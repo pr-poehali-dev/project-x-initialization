@@ -9,6 +9,7 @@ const URLS = {
   expertAuth: func2url['expert-auth'],
   expertReviews: func2url['expert-reviews'],
   eventSubmissions: func2url['event-submissions'],
+  coordinators: func2url['coordinators'],
 }
 
 export function getToken() {
@@ -71,6 +72,7 @@ export interface UserProfile {
   phone: string
   pd_consent: boolean
   is_admin?: boolean
+  coordinator_id?: number | null
   created_at: string
 }
 
@@ -535,4 +537,263 @@ export async function apiLaunchExpertise(eventId: number) {
   const json = await res.json()
   if (!res.ok) throw new Error(json.error || 'Ошибка запуска экспертизы')
   return json as { ok: boolean; assigned: number }
+}
+
+// ─── Coordinators ──────────────────────────────────────────────────────────────
+
+export interface CoordinatorProfile {
+  id: number
+  level: string
+  level_label: string
+  location: string
+  expert_id?: number
+  expert_name?: string
+  expert_email?: string
+  expert_city?: string
+  name?: string
+  email?: string
+  city?: string
+  full_name?: string
+}
+
+export interface ExpertForAdmin {
+  id: number
+  email: string
+  name: string
+  specialization: string
+  city: string
+  phone: string
+  full_name: string
+  coordinator_id: number | null
+  coordinator_level: string | null
+  coordinator_location: string | null
+}
+
+export interface CoordinatorAppeal {
+  id: number
+  user_id: number
+  user_name: string
+  user_email: string
+  title: string
+  message: string
+  status: string
+  status_label: string
+  response: string
+  created_at: string
+  updated_at: string
+}
+
+export interface ProjectBankItem {
+  bank_id: number
+  project_id: number
+  bank_status: string
+  added_at: string
+  title: string
+  expert_status: string
+  author_name: string
+  author_email: string
+}
+
+// Admin
+export async function apiGetExpertsForAdmin() {
+  const token = getToken()
+  const res = await fetch(`${URLS.coordinators}?action=experts`, {
+    headers: { 'X-Session-Token': token || '' },
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка загрузки')
+  return json as ExpertForAdmin[]
+}
+
+export async function apiAssignCoordinator(data: { expert_id: number; level: string; location: string }) {
+  const token = getToken()
+  const res = await fetch(`${URLS.coordinators}?action=assign`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Session-Token': token || '' },
+    body: JSON.stringify(data),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка назначения')
+  return json
+}
+
+export async function apiGetCoordinatorsList() {
+  const token = getToken()
+  const res = await fetch(`${URLS.coordinators}?action=list`, {
+    headers: { 'X-Session-Token': token || '' },
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка загрузки')
+  return json as CoordinatorProfile[]
+}
+
+// Coordinator (expert token)
+export async function apiGetCoordinatorMe() {
+  const token = getExpertToken()
+  const res = await fetch(`${URLS.coordinators}?action=me`, {
+    headers: { 'X-Expert-Token': token || '' },
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка загрузки')
+  return json
+}
+
+export async function apiGetCoordinatorEvents(page = 1) {
+  const token = getExpertToken()
+  const res = await fetch(`${URLS.coordinators}?action=events&page=${page}`, {
+    headers: { 'X-Expert-Token': token || '' },
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка загрузки')
+  return json
+}
+
+export async function apiCreateCoordinatorEvent(data: Record<string, unknown>) {
+  const token = getExpertToken()
+  const res = await fetch(`${URLS.coordinators}?action=create_event`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Expert-Token': token || '' },
+    body: JSON.stringify(data),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка создания')
+  return json
+}
+
+export async function apiUpdateCoordinatorEvent(data: Record<string, unknown>) {
+  const token = getExpertToken()
+  const res = await fetch(`${URLS.coordinators}?action=update_event`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'X-Expert-Token': token || '' },
+    body: JSON.stringify(data),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка обновления')
+  return json
+}
+
+export async function apiDeleteCoordinatorEvent(event_id: number) {
+  const token = getExpertToken()
+  const res = await fetch(`${URLS.coordinators}?action=delete_event`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Expert-Token': token || '' },
+    body: JSON.stringify({ event_id }),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка удаления')
+  return json
+}
+
+export async function apiGetCoordinatorSubmissions(page = 1) {
+  const token = getExpertToken()
+  const res = await fetch(`${URLS.coordinators}?action=submissions&page=${page}`, {
+    headers: { 'X-Expert-Token': token || '' },
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка загрузки')
+  return json
+}
+
+export async function apiGetCoordinatorAppeals(page = 1, status?: string) {
+  const token = getExpertToken()
+  const qs = new URLSearchParams({ action: 'appeals', page: String(page) })
+  if (status) qs.set('status', status)
+  const res = await fetch(`${URLS.coordinators}?${qs}`, {
+    headers: { 'X-Expert-Token': token || '' },
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка загрузки')
+  return json
+}
+
+export async function apiUpdateCoordinatorAppeal(data: { appeal_id: number; status: string; response?: string }) {
+  const token = getExpertToken()
+  const res = await fetch(`${URLS.coordinators}?action=update_appeal`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'X-Expert-Token': token || '' },
+    body: JSON.stringify(data),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка обновления')
+  return json
+}
+
+export async function apiGetProjectBank(page = 1, search = '', status = '') {
+  const token = getExpertToken()
+  const qs = new URLSearchParams({ action: 'project_bank', page: String(page) })
+  if (search) qs.set('search', search)
+  if (status) qs.set('status', status)
+  const res = await fetch(`${URLS.coordinators}?${qs}`, {
+    headers: { 'X-Expert-Token': token || '' },
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка загрузки')
+  return json
+}
+
+export async function apiGetProjectCardForCoordinator(project_id: number) {
+  const token = getExpertToken()
+  const res = await fetch(`${URLS.coordinators}?action=project_card&project_id=${project_id}`, {
+    headers: { 'X-Expert-Token': token || '' },
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка загрузки')
+  return json
+}
+
+// User (session token)
+export async function apiGetAvailableCoordinators(level?: string) {
+  const token = getToken()
+  const qs = new URLSearchParams({ action: 'available' })
+  if (level) qs.set('level', level)
+  const res = await fetch(`${URLS.coordinators}?${qs}`, {
+    headers: { 'X-Session-Token': token || '' },
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка загрузки')
+  return json as CoordinatorProfile[]
+}
+
+export async function apiSetCoordinator(coordinator_id: number) {
+  const token = getToken()
+  const res = await fetch(`${URLS.coordinators}?action=set_coordinator`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Session-Token': token || '' },
+    body: JSON.stringify({ coordinator_id }),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка')
+  return json
+}
+
+export async function apiAddProjectToBank(project_id: number) {
+  const token = getToken()
+  const res = await fetch(`${URLS.coordinators}?action=add_to_bank`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Session-Token': token || '' },
+    body: JSON.stringify({ project_id }),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка')
+  return json
+}
+
+export async function apiCreateAppeal(data: { coordinator_id?: number; title?: string; message: string }) {
+  const token = getToken()
+  const res = await fetch(`${URLS.coordinators}?action=create_appeal`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Session-Token': token || '' },
+    body: JSON.stringify(data),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка')
+  return json
+}
+
+export async function apiGetUserMe() {
+  const token = getToken()
+  if (!token) return null
+  const res = await fetch(URLS.me, { headers: { 'X-Session-Token': token } })
+  if (!res.ok) return null
+  return res.json()
 }
