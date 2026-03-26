@@ -156,7 +156,7 @@ const Index = () => {
             ...heroStyle(0.1),
           }}>
             От идеи<br />до победы<br />
-            <span style={{ color: "rgba(255,255,255,0.35)" }}>в гранте</span>
+            <span style={{ color: "rgba(255,255,255,0.35)" }}></span>
           </h1>
 
           <p style={{
