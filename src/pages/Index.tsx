@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import AuthModal from "@/components/AuthModal"
 import { useNavigate } from "react-router-dom"
 import { getToken } from "@/lib/api"
@@ -10,17 +10,61 @@ const NAV_LINKS = [
   { href: '#cta', label: 'Начать' },
 ]
 
+function useReveal() {
+  const ref = useRef<HTMLDivElement>(null)
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const io = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); io.disconnect() } },
+      { threshold: 0.15 }
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+
+  return { ref, visible }
+}
+
+function RevealSection({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
+  const { ref, visible } = useReveal()
+  return (
+    <div
+      ref={ref}
+      className={className}
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translateY(0)" : "translateY(40px)",
+        transition: `opacity 0.8s cubic-bezier(0.16,1,0.3,1) ${delay}s, transform 0.8s cubic-bezier(0.16,1,0.3,1) ${delay}s`,
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
 const Index = () => {
   const [showAuth, setShowAuth] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [heroVisible, setHeroVisible] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
     if (getToken()) navigate('/dashboard')
+    const t = setTimeout(() => setHeroVisible(true), 50)
+    return () => clearTimeout(t)
   }, [])
 
+  const heroStyle = useCallback((delay: number) => ({
+    opacity: heroVisible ? 1 : 0,
+    transform: heroVisible ? "translateY(0)" : "translateY(30px)",
+    transition: `opacity 0.7s cubic-bezier(0.16,1,0.3,1) ${delay}s, transform 0.7s cubic-bezier(0.16,1,0.3,1) ${delay}s`,
+  }), [heroVisible])
+
   return (
-    <div style={{ background: "#0a0a0a", color: "#fff", fontFamily: "inherit" }}>
+    <div style={{ background: "#0a0a0a", color: "#fff", fontFamily: "inherit", overflowX: "hidden" }}>
 
       {/* ── HEADER ── */}
       <header style={{
@@ -28,6 +72,8 @@ const Index = () => {
         borderBottom: "1px solid rgba(255,255,255,0.06)",
         background: "rgba(10,10,10,0.85)",
         backdropFilter: "blur(16px)",
+        opacity: heroVisible ? 1 : 0,
+        transition: "opacity 0.5s ease 0.1s",
       }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <a href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
@@ -39,7 +85,6 @@ const Index = () => {
             <span style={{ color: "#fff", fontWeight: 600, fontSize: 16, letterSpacing: "-0.01em" }}>Грантовый дайвинг</span>
           </a>
 
-          {/* Desktop nav */}
           <nav className="hidden sm:flex" style={{ alignItems: "center", gap: 4 }}>
             {NAV_LINKS.map(l => (
               <a key={l.href} href={l.href} style={{
@@ -73,7 +118,6 @@ const Index = () => {
             >Начать бесплатно</button>
           </nav>
 
-          {/* Mobile */}
           <div className="flex sm:hidden" style={{ gap: 8 }}>
             <button
               onClick={() => setShowAuth(true)}
@@ -102,17 +146,6 @@ const Index = () => {
       {/* ── HERO ── */}
       <section style={{ maxWidth: 1200, margin: "0 auto", padding: "100px 24px 80px" }}>
         <div style={{ maxWidth: 760 }}>
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: 8,
-            padding: "6px 14px", borderRadius: 100,
-            border: "1px solid rgba(255,255,255,0.1)",
-            background: "rgba(255,255,255,0.04)",
-            marginBottom: 32,
-          }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ade80", display: "inline-block" }} />
-            <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 13 }}>Платформа для НКО и социальных проектов</span>
-          </div>
-
           <h1 style={{
             fontSize: "clamp(40px, 6vw, 80px)",
             fontWeight: 800,
@@ -120,16 +153,21 @@ const Index = () => {
             letterSpacing: "-0.03em",
             marginBottom: 24,
             color: "#fff",
+            ...heroStyle(0.1),
           }}>
             От идеи<br />до победы<br />
             <span style={{ color: "rgba(255,255,255,0.35)" }}>в гранте</span>
           </h1>
 
-          <p style={{ fontSize: "clamp(15px, 1.5vw, 18px)", color: "rgba(255,255,255,0.5)", lineHeight: 1.7, maxWidth: 520, marginBottom: 40 }}>
+          <p style={{
+            fontSize: "clamp(15px, 1.5vw, 18px)", color: "rgba(255,255,255,0.5)",
+            lineHeight: 1.7, maxWidth: 520, marginBottom: 40,
+            ...heroStyle(0.25),
+          }}>
             Проектная карта, экспертное ревью и каталог мероприятий — всё что нужно, чтобы выиграть первый грант.
           </p>
 
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", ...heroStyle(0.4) }}>
             <button
               onClick={() => setShowAuth(true)}
               style={{
@@ -159,22 +197,14 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Stats bar */}
-        <div style={{
-          marginTop: 80,
-          paddingTop: 40,
-          borderTop: "1px solid rgba(255,255,255,0.06)",
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-          gap: 40,
-        }}>
+        <div style={{ marginTop: 80, paddingTop: 40, borderTop: "1px solid rgba(255,255,255,0.06)", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 40 }}>
           {[
             { value: "500+", label: "НКО на платформе" },
             { value: "72%", label: "Процент побед" },
             { value: "38", label: "Экспертов в сети" },
             { value: "2 дня", label: "До готовой заявки" },
-          ].map(s => (
-            <div key={s.label}>
+          ].map((s, i) => (
+            <div key={s.label} style={heroStyle(0.5 + i * 0.1)}>
               <div style={{ fontSize: "clamp(28px, 3vw, 40px)", fontWeight: 800, letterSpacing: "-0.03em", color: "#fff", lineHeight: 1 }}>{s.value}</div>
               <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, marginTop: 6 }}>{s.label}</div>
             </div>
@@ -186,7 +216,7 @@ const Index = () => {
       <section id="about" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 24px" }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "center" }} className="grid-responsive">
-            <div>
+            <RevealSection>
               <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase" }}>О платформе</span>
               <h2 style={{ fontSize: "clamp(28px, 4vw, 48px)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.1, marginTop: 12, marginBottom: 20, color: "#fff" }}>
                 Почему именно<br />Грантовый дайвинг?
@@ -196,11 +226,13 @@ const Index = () => {
               </p>
               <button
                 onClick={() => setShowAuth(true)}
-                style={{ padding: "12px 24px", borderRadius: 8, border: "none", background: "#fff", color: "#0a0a0a", fontSize: 14, fontWeight: 600, cursor: "pointer" }}
+                style={{ padding: "12px 24px", borderRadius: 8, border: "none", background: "#fff", color: "#0a0a0a", fontSize: 14, fontWeight: 600, cursor: "pointer", transition: "background 0.15s, transform 0.15s" }}
+                onMouseEnter={e => { e.currentTarget.style.background = "#e5e5e5"; e.currentTarget.style.transform = "translateY(-1px)" }}
+                onMouseLeave={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.transform = "translateY(0)" }}
               >
                 Попробовать платформу
               </button>
-            </div>
+            </RevealSection>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
               {[
@@ -208,22 +240,24 @@ const Index = () => {
                 { icon: "Shield", title: "Защита от ошибок", text: "Система проверяет слабые места в заявке и готовит к реальным вопросам комиссии." },
                 { icon: "Users", title: "Живые эксперты", text: "Практикующие грантрайтеры с опытом побед в ФПГ, Росмолодёжи и президентских конкурсах." },
               ].map((item, i) => (
-                <div key={i} style={{
-                  display: "flex", gap: 16, padding: "20px 0",
-                  borderBottom: i < 2 ? "1px solid rgba(255,255,255,0.06)" : "none",
-                }}>
+                <RevealSection key={i} delay={i * 0.12}>
                   <div style={{
-                    width: 40, height: 40, borderRadius: 10, flexShrink: 0,
-                    background: "rgba(255,255,255,0.06)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
+                    display: "flex", gap: 16, padding: "20px 0",
+                    borderBottom: i < 2 ? "1px solid rgba(255,255,255,0.06)" : "none",
                   }}>
-                    <Icon name={item.icon} size={18} style={{ color: "rgba(255,255,255,0.6)" }} />
+                    <div style={{
+                      width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+                      background: "rgba(255,255,255,0.06)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                      <Icon name={item.icon} size={18} style={{ color: "rgba(255,255,255,0.6)" }} />
+                    </div>
+                    <div>
+                      <div style={{ color: "#fff", fontWeight: 600, fontSize: 15, marginBottom: 4 }}>{item.title}</div>
+                      <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, lineHeight: 1.6 }}>{item.text}</div>
+                    </div>
                   </div>
-                  <div>
-                    <div style={{ color: "#fff", fontWeight: 600, fontSize: 15, marginBottom: 4 }}>{item.title}</div>
-                    <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, lineHeight: 1.6 }}>{item.text}</div>
-                  </div>
-                </div>
+                </RevealSection>
               ))}
             </div>
           </div>
@@ -233,12 +267,12 @@ const Index = () => {
       {/* ── ВОЗМОЖНОСТИ ── */}
       <section id="features" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 24px" }}>
-          <div style={{ marginBottom: 56 }}>
+          <RevealSection>
             <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase" }}>Возможности</span>
-            <h2 style={{ fontSize: "clamp(28px, 4vw, 48px)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.1, marginTop: 12, color: "#fff" }}>
+            <h2 style={{ fontSize: "clamp(28px, 4vw, 48px)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.1, marginTop: 12, marginBottom: 56, color: "#fff" }}>
               Всё в одном месте
             </h2>
-          </div>
+          </RevealSection>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 2 }}>
             {[
@@ -249,24 +283,26 @@ const Index = () => {
               { icon: "Calendar", title: "Каталог мероприятий", text: "Все актуальные грантовые конкурсы с дедлайнами, суммами и требованиями в одном месте.", accent: "#fb7185" },
               { icon: "BarChart2", title: "Аналитика проектов", text: "Статистика по заявкам: сколько подано, в работе, выиграно. Динамика роста по годам.", accent: "#34d399" },
             ].map((f, i) => (
-              <div key={i} style={{
-                padding: "28px", border: "1px solid rgba(255,255,255,0.06)",
-                transition: "background 0.2s",
-                cursor: "default",
-              }}
-                onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
-                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-              >
+              <RevealSection key={i} delay={i * 0.08}>
                 <div style={{
-                  width: 40, height: 40, borderRadius: 10, marginBottom: 20,
-                  background: f.accent + "18",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                }}>
-                  <Icon name={f.icon} size={18} style={{ color: f.accent }} />
+                  padding: "28px", border: "1px solid rgba(255,255,255,0.06)",
+                  transition: "background 0.2s, border-color 0.2s",
+                  cursor: "default", height: "100%",
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)" }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)" }}
+                >
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 10, marginBottom: 20,
+                    background: f.accent + "18",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    <Icon name={f.icon} size={18} style={{ color: f.accent }} />
+                  </div>
+                  <div style={{ color: "#fff", fontWeight: 600, fontSize: 15, marginBottom: 8 }}>{f.title}</div>
+                  <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, lineHeight: 1.65 }}>{f.text}</div>
                 </div>
-                <div style={{ color: "#fff", fontWeight: 600, fontSize: 15, marginBottom: 8 }}>{f.title}</div>
-                <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, lineHeight: 1.65 }}>{f.text}</div>
-              </div>
+              </RevealSection>
             ))}
           </div>
         </div>
@@ -274,30 +310,32 @@ const Index = () => {
 
       {/* ── CTA ── */}
       <section id="cta" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "100px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 40, flexWrap: "wrap" }}>
-          <div>
-            <h2 style={{ fontSize: "clamp(28px, 4vw, 52px)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.1, color: "#fff", marginBottom: 12 }}>
-              Готовы к первому гранту?
-            </h2>
-            <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 16, lineHeight: 1.6, maxWidth: 440 }}>
-              Регистрация бесплатная. Первый результат — через 15 минут после старта.
-            </p>
+        <RevealSection>
+          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "100px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 40, flexWrap: "wrap" }}>
+            <div>
+              <h2 style={{ fontSize: "clamp(28px, 4vw, 52px)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.1, color: "#fff", marginBottom: 12 }}>
+                Готовы к первому гранту?
+              </h2>
+              <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 16, lineHeight: 1.6, maxWidth: 440 }}>
+                Регистрация бесплатная. Первый результат — через 15 минут после старта.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowAuth(true)}
+              style={{
+                padding: "16px 36px", borderRadius: 10, border: "none",
+                background: "#fff", color: "#0a0a0a",
+                fontSize: 16, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
+                transition: "background 0.15s, transform 0.15s",
+                flexShrink: 0,
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = "#e5e5e5"; e.currentTarget.style.transform = "translateY(-1px)" }}
+              onMouseLeave={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.transform = "translateY(0)" }}
+            >
+              Начать бесплатно
+            </button>
           </div>
-          <button
-            onClick={() => setShowAuth(true)}
-            style={{
-              padding: "16px 36px", borderRadius: 10, border: "none",
-              background: "#fff", color: "#0a0a0a",
-              fontSize: 16, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
-              transition: "background 0.15s, transform 0.15s",
-              flexShrink: 0,
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = "#e5e5e5"; e.currentTarget.style.transform = "translateY(-1px)" }}
-            onMouseLeave={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.transform = "translateY(0)" }}
-          >
-            Начать бесплатно
-          </button>
-        </div>
+        </RevealSection>
       </section>
 
       {/* ── FOOTER ── */}
