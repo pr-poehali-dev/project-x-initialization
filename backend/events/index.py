@@ -185,7 +185,7 @@ def handler(event: dict, context) -> dict:
         return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'ok': True})}
 
     if method == 'DELETE':
-        cur.execute("DELETE FROM event_submissions WHERE event_id=%s", (event_id,))
+        cur.execute("DELETE FROM event_project_submissions WHERE event_id=%s", (event_id,))
         cur.execute("DELETE FROM grant_events WHERE id=%s", (event_id,))
         conn.commit()
         conn.close()
