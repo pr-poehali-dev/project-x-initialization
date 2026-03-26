@@ -154,6 +154,16 @@ export async function apiUpdateProject(id: number, data: Partial<FullProject>) {
   return json as FullProject
 }
 
+export async function apiDeleteProject(id: number) {
+  const res = await fetch(`${URLS.projects}?id=${id}`, {
+    method: 'DELETE',
+    headers: { ...authHeaders() },
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Ошибка удаления')
+  return json
+}
+
 export interface ProjectListItem {
   id: number
   title: string

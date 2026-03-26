@@ -370,5 +370,25 @@ def handler(event: dict, context) -> dict:
         conn.close()
         return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(project)}
 
+    if method == 'DELETE':
+        if not project_id:
+            conn.close()
+            return {'statusCode': 400, 'headers': CORS, 'body': json.dumps({'error': 'Нужен id проекта'})}
+        cur.execute("DELETE FROM event_project_submissions WHERE project_id=%s", (project_id,))
+        cur.execute("DELETE FROM expert_assignments WHERE project_id=%s", (project_id,))
+        cur.execute("DELETE FROM project_tasks WHERE project_id=%s", (project_id,))
+        cur.execute("DELETE FROM project_expenses WHERE project_id=%s", (project_id,))
+        cur.execute("DELETE FROM project_team_members WHERE project_id=%s", (project_id,))
+        cur.execute("DELETE FROM project_media WHERE project_id=%s", (project_id,))
+        cur.execute("DELETE FROM project_events WHERE project_id=%s", (project_id,))
+        cur.execute("DELETE FROM projects WHERE id=%s AND user_id=%s", (project_id, user_id))
+        if cur.rowcount == 0:
+            conn.rollback()
+            conn.close()
+            return {'statusCode': 404, 'headers': CORS, 'body': json.dumps({'error': 'Проект не найден'})}
+        conn.commit()
+        conn.close()
+        return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'ok': True})}
+
     conn.close()
     return {'statusCode': 405, 'headers': CORS, 'body': json.dumps({'error': 'Метод не поддерживается'})}

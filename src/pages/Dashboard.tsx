@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { apiGetMe, apiGetProjects, removeToken } from '@/lib/api'
+import { apiGetMe, apiGetProjects, apiDeleteProject, removeToken } from '@/lib/api'
 import type { Project } from '@/lib/api'
+import { toast } from 'sonner'
 import Icon from '@/components/ui/icon'
 import { useTheme } from '@/hooks/useTheme'
 
@@ -57,6 +58,18 @@ export default function Dashboard() {
   function handleLogout() {
     removeToken()
     navigate('/')
+  }
+
+  async function handleDeleteProject(e: React.MouseEvent, id: number, title: string) {
+    e.stopPropagation()
+    if (!confirm(`Удалить проект «${title}»? Это действие нельзя отменить.`)) return
+    try {
+      await apiDeleteProject(id)
+      setProjects(prev => prev.filter(p => p.id !== id))
+      toast.success('Проект удалён')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Ошибка удаления')
+    }
   }
 
   if (loading) {
@@ -207,7 +220,7 @@ export default function Dashboard() {
                 return (
                   <div
                     key={p.id}
-                    className="flex items-center gap-4 rounded-xl border p-4 cursor-pointer transition-all duration-200"
+                    className="group flex items-center gap-4 rounded-xl border p-4 cursor-pointer transition-all duration-200"
                     style={{ background: t.cardBg, borderColor: t.cardBorder }}
                     onMouseEnter={e => (e.currentTarget.style.borderColor = t.cardHover)}
                     onMouseLeave={e => (e.currentTarget.style.borderColor = t.cardBorder)}
@@ -225,6 +238,14 @@ export default function Dashboard() {
                     <span className={`text-xs font-medium px-2.5 py-1 rounded-lg flex-shrink-0 ${statusClass}`}>
                       {s.label}
                     </span>
+                    <button
+                      onClick={e => handleDeleteProject(e, p.id, p.title)}
+                      className="flex-shrink-0 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-500/10 transition-all"
+                      style={{ color: t.textFaint }}
+                      title="Удалить проект"
+                    >
+                      <Icon name="Trash2" size={15} />
+                    </button>
                     <Icon name="ChevronRight" size={16} style={{ color: t.textFaint }} className="flex-shrink-0" />
                   </div>
                 )
