@@ -375,6 +375,9 @@ def handler(event: dict, context) -> dict:
             conn.close()
             return {'statusCode': 400, 'headers': CORS, 'body': json.dumps({'error': 'Нужен id проекта'})}
         cur.execute("DELETE FROM event_project_submissions WHERE project_id=%s", (project_id,))
+        cur.execute("""DELETE FROM expert_reviews WHERE assignment_id IN (
+            SELECT id FROM expert_assignments WHERE project_id=%s
+        )""", (project_id,))
         cur.execute("DELETE FROM expert_assignments WHERE project_id=%s", (project_id,))
         cur.execute("DELETE FROM project_tasks WHERE project_id=%s", (project_id,))
         cur.execute("DELETE FROM project_expenses WHERE project_id=%s", (project_id,))
