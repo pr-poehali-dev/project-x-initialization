@@ -82,7 +82,6 @@ export default function Index() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (getToken()) navigate("/dashboard")
     const t = setTimeout(() => setMounted(true), 30)
     return () => clearTimeout(t)
   }, [])
